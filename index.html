@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>海の国 - 領土戦争</title>
 <style>
 :root{--bg:#06172b;--panel:#0e2a47;--line:#1f4a75;--text:#e8f4ff;--sub:#8fb4d6;--accent:#ffd54a}
@@ -13,22 +13,26 @@ header{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:2p
 .top h1{font-size:17px;margin:0}
 #stats{font-size:12px;color:var(--sub);display:flex;gap:10px;flex-wrap:wrap}
 #stats b{color:var(--accent)}
-nav{display:flex}
-nav button{flex:1;padding:11px 2px;background:none;border:0;border-bottom:3px solid transparent;color:var(--sub);font-size:12.5px;font-weight:600;cursor:pointer}
+nav{display:flex;overflow-x:auto}
+nav button{flex:1 0 auto;padding:11px 10px;background:none;border:0;border-bottom:3px solid transparent;color:var(--sub);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 nav button.on{color:var(--text);border-bottom-color:var(--accent);background:#12365a}
-main{max-width:860px;margin:0 auto;padding:10px}
+main{max-width:900px;margin:0 auto;padding:10px}
 section{display:none}section.on{display:block}
-canvas{width:100%;display:block;border:2px solid var(--line);border-radius:10px;touch-action:manipulation;background:#0b4a7a}
+#mapwrap{position:relative;height:60vh;min-height:340px;border:2px solid var(--line);border-radius:10px;overflow:hidden;background:#08213a}
+#cv{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.mctl{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px}
+.mctl button{width:38px;height:38px;border-radius:10px;border:0;background:#0e2a47dd;color:#fff;font-size:18px;font-weight:700;cursor:pointer}
+#mini{position:absolute;left:8px;bottom:8px;width:120px;height:84px;border:2px solid #fff8;border-radius:6px;touch-action:none}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:14px}
 .card h3{margin:0 0 6px;font-size:15px}
 .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .btn{background:#1a5c94;color:#fff;border:0;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;cursor:pointer}
 .btn:disabled{opacity:.4}
-.btn.land{background:#2e7d32}.btn.air{background:#6a4bc4}.btn.sea{background:#0277bd}.btn.red{background:#c62828}
+.btn.land{background:#2e7d32}.btn.air{background:#6a4bc4}.btn.sea{background:#0277bd}.btn.red{background:#c62828}.btn.gray{background:#456}
 .rank{display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid var(--line)}
 .rank.me{background:#173f66;border-radius:8px}
 .rank .no{width:34px;text-align:center;font-weight:800;font-size:16px}
-.rank .dot{width:16px;height:16px;border-radius:50%;flex:none;border:2px solid #fff5}
+.rank .dot{width:14px;height:14px;border-radius:50%;flex:none;border:2px solid #fff5}
 .rank .nm{flex:1;min-width:0}
 .rank .nm small{display:block;color:var(--sub);font-size:11px}
 .bar{height:6px;background:#0006;border-radius:3px;margin-top:4px;overflow:hidden}
@@ -38,16 +42,22 @@ canvas{width:100%;display:block;border:2px solid var(--line);border-radius:10px;
 .log small{color:var(--sub);margin-right:6px}
 .unit{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
 .unit:last-child{border:0}
-#overlay{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
-#overlay .box{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:20px;max-width:380px;width:100%}
-#overlay input[type=text]{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:#06172b;color:var(--text);font-size:16px;margin:6px 0 10px}
-#overlay input[type=color]{width:60px;height:38px;border:0;background:none}
-.icons{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
-.ic{font-size:22px;width:42px;height:42px;border-radius:10px;border:2px solid var(--line);background:#06172b;cursor:pointer}
-.ic.on{border-color:var(--accent);background:#173f66}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper .btn{width:38px;padding:8px 0;font-size:16px}
+.stepper b{min-width:26px;text-align:center;font-size:17px}
+.fc{background:#0a2238;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px;line-height:1.7}
+.win{color:#69f0ae;font-weight:800}.lose{color:#ff8a80;font-weight:800}
+.icons{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.ic{font-size:20px;width:38px;height:38px;border-radius:10px;border:2px solid var(--line);background:#06172b;cursor:pointer}
+input[type=text]{width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:#06172b;color:var(--text);font-size:16px;margin:4px 0 8px}
+input.one{width:70px;text-align:center;font-size:22px}
+label{font-size:12px;color:var(--sub);display:block}
+.row2{display:flex;gap:12px;flex-wrap:wrap}
+#overlay{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:50;padding:16px;overflow:auto}
+#overlay .box{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:20px;max-width:400px;width:100%}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#000d;padding:9px 16px;border-radius:20px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:60;max-width:90%}
 #toast.show{opacity:1}
-.hint{color:var(--sub);font-size:12px;margin-top:6px;line-height:1.6}
+.hint{color:var(--sub);font-size:12px;margin-top:6px;line-height:1.7}
 .banner{background:#7a5b00;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px;display:none}
 </style>
 </head>
@@ -61,7 +71,7 @@ canvas{width:100%;display:block;border:2px solid var(--line);border-radius:10px;
     <button data-tab="map" class="on">🗺️ マップ</button>
     <button data-tab="rank">🏆 ランキング</button>
     <button data-tab="army">⚔️ 軍隊</button>
-    <button data-tab="ally">🤝 同盟</button>
+    <button data-tab="ally">🏳️ 国・同盟</button>
     <button data-tab="log">📜 戦況</button>
   </nav>
 </header>
@@ -70,7 +80,17 @@ canvas{width:100%;display:block;border:2px solid var(--line);border-radius:10px;
   <div class="banner" id="banner"></div>
 
   <section id="s-map" class="on">
-    <canvas id="cv"></canvas>
+    <div id="mapwrap">
+      <canvas id="cv"></canvas>
+      <div class="mctl">
+        <button id="zIn">＋</button>
+        <button id="zOut">－</button>
+        <button id="zAll" title="海全体">🌐</button>
+        <button id="zHome" title="自分の首都">🏠</button>
+      </div>
+      <canvas id="mini" width="120" height="84"></canvas>
+    </div>
+    <div class="hint">ドラッグ/スワイプで移動、ピンチ・ホイール・＋－で拡大縮小、🌐で海全体、左下のミニマップをタップでジャンプ</div>
     <div class="card" id="panel">マスをタップして選択してください。</div>
   </section>
 
@@ -82,18 +102,27 @@ canvas{width:100%;display:block;border:2px solid var(--line);border-radius:10px;
     <div class="card">
       <h3>軍隊を増強する</h3>
       <div id="armyList"></div>
-      <div class="hint">
-        相性:<b>空 ▶ 陸 ▶ 海 ▶ 空</b>(有利な相手には1.5倍、不利な相手には0.6倍)<br>
-        ・陸軍:隣接するマスのみ攻撃可能<br>
-        ・海軍:自国から3マス以内を攻撃可能<br>
-        ・空軍:自国から6マス以内を攻撃可能<br>
-        攻撃側は選んだ兵種の全兵力を投入。防衛側は全兵種で守ります。<br>👑 首都は防御1.5倍。<b>首都を落とされると全領土が敵に乗っ取られます。</b><br>🤝 同盟国の軍隊は防衛を30%援護します。
+    </div>
+    <div class="card">
+      <h3>🧠 戦闘のルール(運の要素なし)</h3>
+      <div class="hint" style="margin-top:0">
+        ・攻撃側は<b>出撃させる部隊数</b>を自分で決めます(残りは自国の守りに)<br>
+        ・相性:<b>空 ▶ 陸 ▶ 海 ▶ 空</b>。敵の編成に対して有利な兵種を多く送ると強い<br>
+        ・攻撃力=出撃数 × 敵編成との相性(有利1.5倍/不利0.6倍)<br>
+        ・<b>挟撃</b>:目標マスに隣接する自国マス1つにつき攻撃+10%<br>
+        ・<b>守り</b>:周囲の自国マス1つにつき防御+10%、🧱要塞+50%、👑首都+50%、民兵+1<br>
+        ・🔍<b>偵察</b>(💰15)すると90秒間だけ敵の兵力が見えます。見えない時は読み合い<br>
+        ・攻撃力が防御力を上回れば勝利(同値は防衛側の勝ち)。接戦ほど双方の損害が大きい<br>
+        ・同盟国の軍隊は防衛を30%援護。<b>首都を落とされると全領土が乗っ取られます</b><br>
+        ・射程:陸=隣接、海=3マス、空=6マス
       </div>
     </div>
   </section>
 
   <section id="s-ally">
-    <div id="allyBox"></div>
+    <div class="card" id="setBox"></div>
+    <div class="card"><h3>🤝 同盟</h3><div id="allyList"></div>
+      <div class="hint">・同盟は双方が合意して成立/いつでも解消可能<br>・同盟国は攻撃できず、防衛を30%援護します<br>・首都が陥落した国の同盟は消滅します</div></div>
   </section>
 
   <section id="s-log">
@@ -104,13 +133,15 @@ canvas{width:100%;display:block;border:2px solid var(--line);border-radius:10px;
 <div id="overlay">
   <div class="box">
     <h2 style="margin:0 0 8px">🏝️ 建国しよう</h2>
-    <div style="font-size:13px;color:var(--sub)">国名と国旗カラーを決めてください。</div>
-    <input type="text" id="nName" maxlength="12" placeholder="国名(例:エッグ王国)">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <span>国の色</span><input type="color" id="nColor" value="#ff7043">
+    <label>国名</label>
+    <input type="text" id="nName" maxlength="12" placeholder="例:エッグ王国">
+    <div class="row2">
+      <div><label>国の色</label><input type="color" id="nColor" value="#ff7043" style="width:60px;height:42px;border:0;background:none"></div>
+      <div><label>国のアイコン(好きな1文字)</label><input type="text" class="one" id="nIcon" value="🥚"></div>
     </div>
-    <div style="font-size:13px;color:var(--sub)">国のアイコン(首都に表示されます)</div>
     <div class="icons" id="iconPick"></div>
+    <label>首都の名前(あとで変更できます)</label>
+    <input type="text" id="nCap" maxlength="12" placeholder="例:エッグシティ">
     <button class="btn" id="nGo" style="width:100%;font-size:15px;padding:12px">建国する</button>
   </div>
 </div>
@@ -132,8 +163,13 @@ const firebaseConfig = {
 };
 
 const $ = id => document.getElementById(id);
-function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>e.classList.remove('show'),2200)}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>e.classList.remove('show'),2400)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function firstChar(s){
+  s = (s || '').trim(); if (!s) return null;
+  if (window.Intl && Intl.Segmenter) { const it = new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(s)[Symbol.iterator]().next(); return it.value.segment; }
+  return Array.from(s)[0];
+}
 
 if (typeof firebase === 'undefined') {
   document.body.innerHTML = '<div style="padding:30px">Firebaseを読み込めませんでした。ネット接続と、http(s)で開いているか確認してください。</div>';
@@ -143,44 +179,53 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // ===== 設定 =====
-const W = 36, H = 26, C = 24;               // マップ幅・高さ・1マスのpx
+const W = 80, H = 56, C = 24;                 // 海の広さ(マス)/ 1マスの基準px
+const TYPES = ['land', 'air', 'sea'];
 const COST = { land: 30, air: 50, sea: 40 };
 const NAME = { land: '陸軍', air: '空軍', sea: '海軍' };
 const ICON = { land: '🪖', air: '✈️', sea: '🚢' };
 const RANGE = { land: 1, sea: 3, air: 6 };
-const BEATS = { air: 'land', land: 'sea', sea: 'air' };   // 左が右に有利
-const COOLDOWN = 4000;
-const ICONS = ['🥚','🐉','🦅','🦁','🐺','🐻','🦈','🐙','🦊','🐢','🐘','🌸','⭐','🔥','⚓','👑'];
-let pickIcon = ICONS[0];
-function renderPick() {
-  $('iconPick').innerHTML = ICONS.map(i => `<button class="ic ${i === pickIcon ? 'on' : ''}" data-i="${i}">${i}</button>`).join('');
-  document.querySelectorAll('#iconPick .ic').forEach(b => b.onclick = () => { pickIcon = b.dataset.i; renderPick(); });
-}
-renderPick();
+const BEATS = { air: 'land', land: 'sea', sea: 'air' };
+const COOLDOWN = 4000, SCOUT_COST = 15, SCOUT_MS = 90000, FORT_COST = 25;
+const PRESETS = ['🥚','🐉','🦅','🦁','🐺','🐻','🦈','🐙','🦊','🐢','🐘','🌸','⭐','🔥','⚓','👑','🏯','🌙'];
+const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
 
 let myId = localStorage.getItem('umiNationId');
-let nations = {}, tiles = {}, logs = [];
-let sel = null, lastAtk = 0, loaded = false;
+let nations = {}, tiles = {}, forts = {}, logs = [];
+let sel = null, lastAtk = 0, send = { land: 0, air: 0, sea: 0 };
+const scoutUntil = {};
 
 const me = () => nations[myId];
 const expandCost = () => 8 + Math.floor((me()?.tiles || 0) * 0.5);
+const isAlly = id => !!(me() && me().allies && me().allies[id]);
+const isKnown = id => id === myId || isAlly(id) || (scoutUntil[id] || 0) > Date.now();
+const capName = n => (n && n.capitalName) || '首都';
+const capIcon = n => (n && (n.capitalIcon || '🏛️'));
 
 // ===== タブ =====
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id === 's-' + b.dataset.tab));
-  if (b.dataset.tab === 'map') draw();
+  if (b.dataset.tab === 'map') requestAnimationFrame(resize);
 });
 
 // ===== 建国 =====
+function renderPick() {
+  $('iconPick').innerHTML = PRESETS.map(i => `<button class="ic" data-i="${i}">${i}</button>`).join('');
+  document.querySelectorAll('#iconPick .ic').forEach(b => b.onclick = () => { $('nIcon').value = b.dataset.i; });
+}
+renderPick();
+
 $('nGo').onclick = async () => {
   const name = $('nName').value.trim();
   if (!name) return toast('国名を入力してください');
+  const icon = firstChar($('nIcon').value) || '🥚';
+  const cn = $('nCap').value.trim() || (name + 'の首都');
   myId = 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   localStorage.setItem('umiNationId', myId);
   await db.ref('nations/' + myId).set({
-    name, color: $('nColor').value, icon: pickIcon, tiles: 0, gold: 60,
-    units: { land: 1, air: 0, sea: 0 }, created: Date.now()
+    name, color: $('nColor').value, icon, capitalName: cn, capitalIcon: '🏛️',
+    tiles: 0, gold: 60, units: { land: 1, air: 0, sea: 0 }, created: Date.now()
   });
   pushLog(`🏝️ 「${name}」が海の上に建国を宣言した!`);
   $('overlay').style.display = 'none';
@@ -188,9 +233,9 @@ $('nGo').onclick = async () => {
 
 // ===== DB購読 =====
 db.ref('tiles').on('value', s => { tiles = s.val() || {}; draw(); renderPanel(); });
+db.ref('forts').on('value', s => { forts = s.val() || {}; draw(); renderPanel(); });
 db.ref('nations').on('value', s => {
   nations = s.val() || {};
-  loaded = true;
   $('overlay').style.display = (!myId || !nations[myId]) ? 'flex' : 'none';
   renderAll();
 });
@@ -204,65 +249,173 @@ setInterval(() => {
   const n = me();
   if (n && n.tiles > 0) db.ref('nations/' + myId + '/gold').transaction(g => (g || 0) + 2 + n.tiles);
 }, 3000);
+setInterval(() => { if (sel && tiles[sel.x + '_' + sel.y] && tiles[sel.x + '_' + sel.y] !== myId) renderPanel(); }, 2000);
 
-// ===== 描画 =====
-const cv = $('cv'), ctx = cv.getContext('2d');
-cv.width = W * C; cv.height = H * C;
+// ===== カメラ(スワイプ移動・ピンチ拡大縮小) =====
+const cv = $('cv'), ctx = cv.getContext('2d'), mini = $('mini'), mctx = mini.getContext('2d');
+let cam = { x: 0, y: 0, z: 1 }, vw = 0, vh = 0, dpr = 1, camInit = false;
+const fitZ = () => Math.min(vw / (W * C), vh / (H * C));
 
-function draw() {
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    ctx.fillStyle = (x + y) % 2 ? '#0d5a94' : '#0b5089';
-    ctx.fillRect(x * C, y * C, C, C);
-    const o = tiles[x + '_' + y];
-    if (o && nations[o]) {
-      ctx.fillStyle = nations[o].color;
-      ctx.globalAlpha = .85;
-      ctx.fillRect(x * C + 1, y * C + 1, C - 2, C - 2);
-      ctx.globalAlpha = 1;
-      if (o === myId) {
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-        ctx.strokeRect(x * C + 2, y * C + 2, C - 4, C - 4);
-      } else if (isAlly(o)) {
-        ctx.fillStyle = '#69f0ae';
-        ctx.fillRect(x * C + 3, y * C + 3, 5, 5);
-      }
-      if (nations[o].capital === x + '_' + y) {
-        ctx.strokeStyle = '#ffd54a'; ctx.lineWidth = 3;
-        ctx.strokeRect(x * C + 1.5, y * C + 1.5, C - 3, C - 3);
-        ctx.font = (C - 8) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#fff';
-        ctx.fillText(nations[o].icon || '🏳️', x * C + C / 2, y * C + C / 2 + 1);
-      }
-    }
-  }
-  if (sel) {
-    ctx.strokeStyle = '#ffd54a'; ctx.lineWidth = 3;
-    ctx.strokeRect(sel.x * C + 1.5, sel.y * C + 1.5, C - 3, C - 3);
-  }
+function clampCam() {
+  cam.z = Math.min(4, Math.max(fitZ() * 0.98, cam.z));
+  const ww = vw / cam.z, wh = vh / cam.z;
+  cam.x = ww >= W * C ? (W * C - ww) / 2 : Math.min(Math.max(cam.x, -ww * 0.2), W * C - ww * 0.8);
+  cam.y = wh >= H * C ? (H * C - wh) / 2 : Math.min(Math.max(cam.y, -wh * 0.2), H * C - wh * 0.8);
 }
+function fitAll() { cam.z = fitZ(); cam.x = (W * C - vw / cam.z) / 2; cam.y = (H * C - vh / cam.z) / 2; }
+function resize() {
+  const r = $('mapwrap').getBoundingClientRect();
+  if (r.width < 10) return;
+  dpr = window.devicePixelRatio || 1; vw = r.width; vh = r.height;
+  cv.width = vw * dpr; cv.height = vh * dpr;
+  if (!camInit) { fitAll(); camInit = true; }
+  clampCam(); draw();
+}
+window.addEventListener('resize', resize);
+function zoomAt(sx, sy, f) {
+  const wx = cam.x + sx / cam.z, wy = cam.y + sy / cam.z;
+  cam.z *= f; clampCam();
+  cam.x = wx - sx / cam.z; cam.y = wy - sy / cam.z;
+  clampCam(); draw();
+}
+function centerOn(cx, cy) { cam.x = (cx + .5) * C - vw / cam.z / 2; cam.y = (cy + .5) * C - vh / cam.z / 2; clampCam(); draw(); }
 
-cv.addEventListener('click', e => {
-  const r = cv.getBoundingClientRect();
-  const x = Math.floor((e.clientX - r.left) / r.width * W);
-  const y = Math.floor((e.clientY - r.top) / r.height * H);
+$('zIn').onclick = () => zoomAt(vw / 2, vh / 2, 1.5);
+$('zOut').onclick = () => zoomAt(vw / 2, vh / 2, 1 / 1.5);
+$('zAll').onclick = () => { fitAll(); clampCam(); draw(); };
+$('zHome').onclick = () => {
+  const n = me();
+  if (!n || !n.capital) return toast('首都がありません');
+  const [x, y] = n.capital.split('_').map(Number);
+  cam.z = Math.max(cam.z, 1); centerOn(x, y);
+};
+
+const ptrs = new Map(); let dragMoved = false, downT = 0, pinchD = 0, startPos = { x: 0, y: 0 };
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+  if (ptrs.size === 1) { dragMoved = false; downT = Date.now(); startPos = { x: e.offsetX, y: e.offsetY }; }
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinchD = Math.hypot(a.x - b.x, a.y - b.y); dragMoved = true; }
+});
+cv.addEventListener('pointermove', e => {
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  const nx = e.offsetX, ny = e.offsetY;
+  if (ptrs.size === 1) {
+    if (Math.abs(nx - startPos.x) + Math.abs(ny - startPos.y) > 6) dragMoved = true;
+    if (dragMoved) { cam.x -= (nx - p.x) / cam.z; cam.y -= (ny - p.y) / cam.z; clampCam(); draw(); }
+    p.x = nx; p.y = ny;
+  } else if (ptrs.size === 2) {
+    p.x = nx; p.y = ny;
+    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinchD > 0) zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, d / pinchD);
+    pinchD = d;
+  }
+});
+function endPtr(e, tapOk) {
+  const wasTap = tapOk && !dragMoved && ptrs.size === 1 && Date.now() - downT < 600;
+  ptrs.delete(e.pointerId); pinchD = 0;
+  if (wasTap) tap(e.offsetX, e.offsetY);
+}
+cv.addEventListener('pointerup', e => endPtr(e, true));
+cv.addEventListener('pointercancel', e => endPtr(e, false));
+cv.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.offsetX, e.offsetY, e.deltaY < 0 ? 1.18 : 1 / 1.18); }, { passive: false });
+
+// ミニマップ
+function miniJump(e) { centerOn(e.offsetX / mini.clientWidth * W, e.offsetY / mini.clientHeight * H); }
+let miniDrag = false;
+mini.addEventListener('pointerdown', e => { miniDrag = true; mini.setPointerCapture(e.pointerId); miniJump(e); });
+mini.addEventListener('pointermove', e => { if (miniDrag) miniJump(e); });
+mini.addEventListener('pointerup', () => miniDrag = false);
+
+function tap(sx, sy) {
+  const x = Math.floor((cam.x + sx / cam.z) / C), y = Math.floor((cam.y + sy / cam.z) / C);
   if (x < 0 || y < 0 || x >= W || y >= H) return;
+  if (!sel || sel.x !== x || sel.y !== y) send = { land: 0, air: 0, sea: 0 };
   sel = { x, y };
   const n = me();
   if (n && n.tiles <= 0 && !tiles[x + '_' + y]) { found(x, y); return; }
   draw(); renderPanel();
-});
+}
+
+// ===== 描画 =====
+function draw() {
+  if (!vw) return;
+  const z = cam.z;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#08213a'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(z * dpr, 0, 0, z * dpr, -cam.x * z * dpr, -cam.y * z * dpr);
+  ctx.fillStyle = '#0b5089'; ctx.fillRect(0, 0, W * C, H * C);
+  const x0 = Math.max(0, Math.floor(cam.x / C)), x1 = Math.min(W, Math.ceil((cam.x + vw / z) / C));
+  const y0 = Math.max(0, Math.floor(cam.y / C)), y1 = Math.min(H, Math.ceil((cam.y + vh / z) / C));
+  const cs = C * z;                                   // 画面上の1マスのpx
+  if (cs >= 8) {
+    ctx.fillStyle = '#0d5a94';
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) if ((x + y) % 2) ctx.fillRect(x * C, y * C, C, C);
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+    const k = x + '_' + y, o = tiles[k];
+    if (!o || !nations[o]) continue;
+    const n = nations[o];
+    ctx.globalAlpha = .9; ctx.fillStyle = n.color;
+    ctx.fillRect(x * C + .5, y * C + .5, C - 1, C - 1);
+    ctx.globalAlpha = 1;
+    if (o === myId) {
+      if (cs >= 10) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x * C + 2, y * C + 2, C - 4, C - 4); }
+      else { ctx.fillStyle = '#fff'; ctx.fillRect(x * C + C * .33, y * C + C * .33, C * .34, C * .34); }
+    } else if (isAlly(o)) { ctx.fillStyle = '#69f0ae'; ctx.fillRect(x * C + 2, y * C + 2, C * .3, C * .3); }
+    if (forts[k]) { ctx.strokeStyle = '#111'; ctx.lineWidth = Math.max(2, C * .12); ctx.strokeRect(x * C + 3, y * C + 3, C - 6, C - 6); }
+    if (cs >= 18 && n.capital !== k) {
+      ctx.globalAlpha = .75; ctx.font = (C * .6) + 'px sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText(n.icon || '🏳️', x * C + C / 2, y * C + C / 2 + 1); ctx.globalAlpha = 1;
+    }
+  }
+  // 首都(最前面)
+  for (const id in nations) {
+    const n = nations[id];
+    if (!n.capital || tiles[n.capital] !== id) continue;
+    const [cx, cy] = n.capital.split('_').map(Number);
+    if (cx < x0 - 3 || cx > x1 + 3 || cy < y0 - 3 || cy > y1 + 3) continue;
+    const size = Math.max(C * .9, 18 / z), px = cx * C + C / 2, py = cy * C + C / 2;
+    ctx.fillStyle = '#000a'; ctx.beginPath(); ctx.arc(px, py, size * .6, 0, 7); ctx.fill();
+    ctx.strokeStyle = n.color; ctx.lineWidth = 3 / z; ctx.stroke();
+    ctx.font = (size * .8) + 'px sans-serif'; ctx.fillStyle = '#fff';
+    ctx.fillText(capIcon(n), px, py + 1 / z);
+    if (cs >= 8 || z < 0.58) {
+      const label = z < 0.58 ? (n.icon || '') + n.name : capName(n);
+      ctx.font = `bold ${11 / z}px sans-serif`; ctx.lineWidth = 3 / z; ctx.strokeStyle = '#000'; ctx.lineJoin = 'round';
+      ctx.strokeText(label, px, py + size * .6 + 8 / z); ctx.fillStyle = '#fff'; ctx.fillText(label, px, py + size * .6 + 8 / z);
+    }
+  }
+  if (sel) { ctx.strokeStyle = '#ffd54a'; ctx.lineWidth = 3 / z; ctx.strokeRect(sel.x * C, sel.y * C, C, C); }
+  drawMini();
+}
+function drawMini() {
+  const s = mini.width / W;
+  mctx.clearRect(0, 0, mini.width, mini.height);
+  mctx.fillStyle = '#0b4a7a'; mctx.fillRect(0, 0, mini.width, mini.height);
+  for (const k in tiles) {
+    const n = nations[tiles[k]]; if (!n) continue;
+    const [x, y] = k.split('_').map(Number);
+    mctx.fillStyle = tiles[k] === myId ? '#fff' : n.color;
+    mctx.fillRect(x * s, y * s, Math.max(1.5, s), Math.max(1.5, s));
+  }
+  mctx.strokeStyle = '#ffd54a'; mctx.lineWidth = 1.5;
+  mctx.strokeRect(cam.x / C * s, cam.y / C * s, vw / cam.z / C * s, vh / cam.z / C * s);
+}
 
 // ===== 位置ヘルパー =====
-function myTiles() {
-  const a = [];
-  for (const k in tiles) if (tiles[k] === myId) { const [x, y] = k.split('_').map(Number); a.push({ x, y }); }
-  return a;
-}
 function minDist(x, y) {
-  let m = 99;
-  for (const t of myTiles()) m = Math.min(m, Math.abs(t.x - x) + Math.abs(t.y - y));
+  let m = 999;
+  for (const k in tiles) if (tiles[k] === myId) { const [a, b] = k.split('_').map(Number); m = Math.min(m, Math.abs(a - x) + Math.abs(b - y)); }
   return m;
+}
+function countNb(x, y, owner) {
+  let c = 0; for (const [dx, dy] of DIRS) if (tiles[(x + dx) + '_' + (y + dy)] === owner) c++; return c;
+}
+function terrain(k, did) {
+  const [x, y] = k.split('_').map(Number), d = nations[did];
+  return { flank: countNb(x, y, myId), fn: countNb(x, y, did), fort: !!forts[k], isCap: !!d && d.capital === k };
 }
 
 // ===== 建国(首都) =====
@@ -271,104 +424,125 @@ async function found(x, y) {
   if (!tr.committed) return toast('そのマスは他国の領土です');
   await db.ref('nations/' + myId + '/tiles').transaction(v => (v || 0) + 1);
   await db.ref('nations/' + myId + '/capital').set(x + '_' + y);
-  pushLog(`👑 ${me().name} が (${x},${y}) に首都を築いた`);
+  pushLog(`👑 ${me().name} が (${x},${y}) に首都「${capName(me())}」を築いた`);
   toast('首都を建設しました!');
 }
 
-// ===== 領土拡張 =====
+// ===== 領土拡張・要塞・偵察・購入 =====
 async function expand() {
   if (!sel) return;
   const { x, y } = sel, k = x + '_' + y, cost = expandCost();
   if (tiles[k]) return toast('すでに誰かの領土です');
   if (minDist(x, y) !== 1) return toast('自国に隣接するマスだけ拡張できます');
-  const r = await db.ref('nations/' + myId).transaction(n => {
-    if (!n || (n.gold || 0) < cost) return;
-    n.gold -= cost; return n;
-  });
+  const r = await db.ref('nations/' + myId).transaction(n => { if (!n || (n.gold || 0) < cost) return; n.gold -= cost; return n; });
   if (!r.committed) return toast('資金が足りません');
   const tr = await db.ref('tiles/' + k).transaction(c => c === null ? myId : undefined);
-  if (tr.committed) {
-    await db.ref('nations/' + myId + '/tiles').transaction(v => (v || 0) + 1);
-    toast('領土を拡張しました');
-  } else {
-    db.ref('nations/' + myId + '/gold').transaction(g => (g || 0) + cost);
-    toast('先に他国に取られました');
-  }
+  if (tr.committed) { await db.ref('nations/' + myId + '/tiles').transaction(v => (v || 0) + 1); toast('領土を拡張しました'); }
+  else { db.ref('nations/' + myId + '/gold').transaction(g => (g || 0) + cost); toast('先に他国に取られました'); }
 }
-
-// ===== 兵の購入 =====
+async function fortify() {
+  if (!sel) return;
+  const k = sel.x + '_' + sel.y;
+  if (tiles[k] !== myId || forts[k]) return;
+  const r = await db.ref('nations/' + myId).transaction(n => { if (!n || (n.gold || 0) < FORT_COST) return; n.gold -= FORT_COST; return n; });
+  if (!r.committed) return toast('資金が足りません');
+  await db.ref('forts/' + k).set(true); toast('🧱 要塞化しました(防御+50%)');
+}
+async function scout(id) {
+  const r = await db.ref('nations/' + myId).transaction(n => { if (!n || (n.gold || 0) < SCOUT_COST) return; n.gold -= SCOUT_COST; return n; });
+  if (!r.committed) return toast('資金が足りません');
+  scoutUntil[id] = Date.now() + SCOUT_MS;
+  toast(`🔍 ${nations[id].name} の戦力を偵察(90秒)`); renderPanel(); renderRank();
+}
 async function buy(type) {
   const cost = COST[type];
   const r = await db.ref('nations/' + myId).transaction(n => {
     if (!n || (n.gold || 0) < cost) return;
-    n.gold -= cost;
-    n.units = n.units || { land: 0, air: 0, sea: 0 };
-    n.units[type] = (n.units[type] || 0) + 1;
-    return n;
+    n.gold -= cost; n.units = n.units || { land: 0, air: 0, sea: 0 };
+    n.units[type] = (n.units[type] || 0) + 1; return n;
   });
   toast(r.committed ? `${NAME[type]}を1部隊増強` : '資金が足りません');
 }
 
-// ===== 戦争 =====
-function mult(d, t) { return BEATS[d] === t ? 1.5 : (BEATS[t] === d ? 0.6 : 1); }
+// ===== 戦争(運なし・読み合い) =====
+const mm = (x, y) => BEATS[x] === y ? 1.5 : (BEATS[y] === x ? 0.6 : 1);
+const mixMult = (T, sh, tot) => tot ? TYPES.reduce((s, D) => s + sh[D] * mm(T, D), 0) : 1;
 
-async function attack(type) {
+function forecast(snd, k, did) {
+  const d = nations[did], tr = terrain(k, did);
+  const def = { land: 0, air: 0, sea: 0 };
+  for (const T of TYPES) def[T] = (d.units && d.units[T]) || 0;
+  for (const aid of Object.keys(d.allies || {})) {
+    const an = nations[aid];
+    if (an && (an.tiles || 0) > 0) for (const T of TYPES) def[T] += ((an.units && an.units[T]) || 0) * 0.3;
+  }
+  const sT = TYPES.reduce((s, T) => s + (snd[T] || 0), 0), dT = TYPES.reduce((s, T) => s + def[T], 0);
+  const sSh = {}, dSh = {};
+  for (const T of TYPES) { sSh[T] = sT ? (snd[T] || 0) / sT : 0; dSh[T] = dT ? def[T] / dT : 0; }
+  let atk = 0, dfn = 0;
+  for (const T of TYPES) { atk += (snd[T] || 0) * mixMult(T, dSh, dT); dfn += def[T] * mixMult(T, sSh, sT); }
+  atk *= 1 + 0.1 * tr.flank;
+  dfn = (dfn + 1) * (1 + 0.1 * tr.fn) * (tr.fort ? 1.5 : 1) * (tr.isCap ? 1.5 : 1);
+  const win = atk > dfn, hi = Math.max(atk, dfn), lo = Math.min(atk, dfn), r = hi > 0 ? lo / hi : 0;
+  const wl = 0.6 * r, ll = Math.min(0.95, 0.5 + 0.4 * (1 - r));
+  return { atk, dfn, win, fa: win ? wl : ll, fd: win ? ll : wl, tr, def };
+}
+
+async function attack() {
   if (!sel) return;
   const k = sel.x + '_' + sel.y, did = tiles[k], d = nations[did], a = me();
   if (!did || did === myId || !d) return;
   if (isAlly(did)) return toast('同盟国は攻撃できません(先に同盟を解消)');
   if (Date.now() - lastAtk < COOLDOWN) return toast('部隊が再編中です(数秒待って)');
-  const dist = minDist(sel.x, sel.y);
-  if (dist > RANGE[type]) return toast(`${NAME[type]}の射程外です(射程${RANGE[type]}マス)`);
-  const committed = (a.units && a.units[type]) || 0;
-  if (committed < 1) return toast(`${NAME[type]}がいません`);
+  const dist = minDist(sel.x, sel.y), u = a.units || {};
+  let total = 0;
+  for (const T of TYPES) {
+    const s = send[T] || 0; if (s <= 0) continue;
+    if (dist > RANGE[T]) return toast(`${NAME[T]}は射程外です`);
+    if (s > (u[T] || 0)) return toast('兵力が足りません');
+    total += s;
+  }
+  if (total < 1) return toast('出撃させる部隊を選んでください');
   lastAtk = Date.now();
 
-  const isCap = d.capital === k;
-  let def = 1;
-  const addDef = (u, f) => { for (const t of ['land', 'air', 'sea']) def += (u[t] || 0) * mult(t, type) * f; };
-  addDef(d.units || {}, 1);
-  for (const aid of Object.keys(d.allies || {})) {           // 同盟国の援護(30%)
-    const an = nations[aid];
-    if (an && (an.tiles || 0) > 0) addDef(an.units || {}, 0.3);
-  }
-  if (isCap) def *= 1.5;                                      // 首都は防御1.5倍
-  const atk = committed * (0.8 + Math.random() * 0.4);
-  const win = atk > def;
+  const f = forecast(send, k, did), sent = { ...send };
+  send = { land: 0, air: 0, sea: 0 };
+  const isCap = f.tr.isCap;
 
-  const aLoss = Math.max(1, Math.ceil(committed * (win ? 0.3 : 0.5)));
-  const dRate = win ? 0.2 : 0.1;
-
-  await db.ref('nations/' + myId + '/units/' + type).transaction(v => Math.max(0, (v || 0) - aLoss));
+  await db.ref('nations/' + myId).transaction(n => {
+    if (!n) return; n.units = n.units || {};
+    for (const T of TYPES) n.units[T] = Math.max(0, (n.units[T] || 0) - Math.ceil((sent[T] || 0) * f.fa));
+    return n;
+  });
   await db.ref('nations/' + did).transaction(n => {
-    if (!n) return;
-    n.units = n.units || {};
-    for (const t of ['land', 'air', 'sea']) n.units[t] = Math.floor((n.units[t] || 0) * (1 - dRate));
-    if (win && !isCap) n.tiles = Math.max(0, (n.tiles || 0) - 1);
+    if (!n) return; n.units = n.units || {};
+    for (const T of TYPES) n.units[T] = Math.floor((n.units[T] || 0) * (1 - f.fd));
+    if (f.win && !isCap) n.tiles = Math.max(0, (n.tiles || 0) - 1);
     return n;
   });
 
-  if (win && isCap) {
+  const desc = `(陸${sent.land} 空${sent.air} 海${sent.sea})`;
+  if (f.win && isCap) {
     const cnt = await annex(did, d);
-    pushLog(`👑 ${ICON[type]} ${a.name} が ${d.name} の首都を陥落!${cnt}マスの全領土を乗っ取った!`);
+    pushLog(`👑 ${a.name} が ${d.name} の首都「${capName(d)}」を陥落!${cnt}マスの全領土を乗っ取った!`);
     pushLog(`💀 ${d.name} は滅亡した…`);
     toast(`首都陥落!${d.name}を乗っ取りました(+${cnt}マス)`);
-  } else if (win) {
-    await db.ref('tiles/' + k).set(myId);
+  } else if (f.win) {
+    const up = {}; up['tiles/' + k] = myId; up['forts/' + k] = null;
+    await db.ref().update(up);
     await db.ref('nations/' + myId + '/tiles').transaction(v => (v || 0) + 1);
-    pushLog(`${ICON[type]} ${a.name} が ${d.name} の (${sel.x},${sel.y}) を${NAME[type]}で占領!`);
-    toast(`勝利!領土を奪いました(損害:${aLoss})`);
+    pushLog(`⚔️ ${a.name} が ${d.name} の (${sel.x},${sel.y}) を占領! ${desc}`);
+    toast('勝利!領土を奪いました');
   } else {
-    pushLog(`🛡️ ${d.name} が ${a.name} の${NAME[type]}による攻撃を撃退した`);
-    toast(`敗北…(損害:${aLoss})`);
+    pushLog(`🛡️ ${d.name} が ${a.name} の攻撃を撃退した ${desc}`);
+    toast('敗北…防衛されました');
   }
+  renderPanel();
 }
 
-// 首都陥落:敵の全領土を自国に編入し、資金の半分を戦利品として得る
 async function annex(did, d) {
-  const up = {};
-  let cnt = 0;
-  for (const key in tiles) if (tiles[key] === did) { up['tiles/' + key] = myId; cnt++; }
+  const up = {}; let cnt = 0;
+  for (const key in tiles) if (tiles[key] === did) { up['tiles/' + key] = myId; up['forts/' + key] = null; cnt++; }
   up['nations/' + did + '/tiles'] = 0;
   up['nations/' + did + '/capital'] = null;
   up['nations/' + did + '/allies'] = null;
@@ -378,39 +552,61 @@ async function annex(did, d) {
   await db.ref().update(up);
   const loot = Math.floor((d.gold || 0) / 2);
   await db.ref('nations/' + did + '/gold').transaction(g => Math.floor((g || 0) / 2));
-  await db.ref('nations/' + myId).transaction(n => {
-    if (!n) return;
-    n.tiles = (n.tiles || 0) + cnt;
-    n.gold = (n.gold || 0) + loot;
-    return n;
-  });
+  await db.ref('nations/' + myId).transaction(n => { if (!n) return; n.tiles = (n.tiles || 0) + cnt; n.gold = (n.gold || 0) + loot; return n; });
   return cnt;
 }
 
-// ===== 同盟 =====
-const isAlly = id => !!(me() && me().allies && me().allies[id]);
-async function reqAlly(id) {
-  await db.ref(`nations/${id}/req/${myId}`).set(true);
-  toast('同盟を申請しました');
+function adj(T, dlt) {
+  const u = (me().units || {})[T] || 0;
+  send[T] = Math.max(0, Math.min(u, (send[T] || 0) + dlt)); renderPanel();
 }
+function allIn() {
+  const d = minDist(sel.x, sel.y), u = me().units || {};
+  for (const T of TYPES) send[T] = d <= RANGE[T] ? (u[T] || 0) : 0;
+  renderPanel();
+}
+
+// ===== 同盟 =====
+async function reqAlly(id) { await db.ref(`nations/${id}/req/${myId}`).set(true); toast('同盟を申請しました'); }
 async function acceptAlly(id) {
   const u = {};
-  u[`nations/${myId}/allies/${id}`] = true;
-  u[`nations/${id}/allies/${myId}`] = true;
-  u[`nations/${myId}/req/${id}`] = null;
-  u[`nations/${id}/req/${myId}`] = null;
+  u[`nations/${myId}/allies/${id}`] = true; u[`nations/${id}/allies/${myId}`] = true;
+  u[`nations/${myId}/req/${id}`] = null; u[`nations/${id}/req/${myId}`] = null;
   await db.ref().update(u);
   pushLog(`🤝 ${me().name} と ${nations[id].name} が同盟を結んだ!`);
 }
 async function declineAlly(id) { await db.ref(`nations/${myId}/req/${id}`).remove(); }
 async function breakAlly(id) {
-  const u = {};
-  u[`nations/${myId}/allies/${id}`] = null;
-  u[`nations/${id}/allies/${myId}`] = null;
+  const u = {}; u[`nations/${myId}/allies/${id}`] = null; u[`nations/${id}/allies/${myId}`] = null;
   await db.ref().update(u);
   pushLog(`💔 ${me().name} が ${nations[id].name} との同盟を破棄した`);
 }
-async function setIcon(i) { await db.ref(`nations/${myId}/icon`).set(i); }
+
+// ===== 国の設定 =====
+let settingsBuilt = false;
+function renderSettings() {
+  const n = me(); if (settingsBuilt || !n) return;
+  settingsBuilt = true;
+  $('setBox').innerHTML = `
+    <h3>🏳️ 国の設定</h3>
+    <label>国名</label><input type="text" id="sName" maxlength="12" value="${esc(n.name)}">
+    <div class="row2">
+      <div><label>国のアイコン(好きな1文字)</label><input type="text" class="one" id="sIcon" value="${esc(n.icon || '🏳️')}"></div>
+      <div><label>首都のアイコン(好きな1文字)</label><input type="text" class="one" id="sCapIcon" value="${esc(capIcon(n))}"></div>
+    </div>
+    <label>首都の名前</label><input type="text" id="sCap" maxlength="12" value="${esc(n.capitalName || '')}" placeholder="首都の名前">
+    <div class="hint" style="margin-top:0">よく使うアイコン(タップで国のアイコンに入力)</div>
+    <div class="icons" id="setPick">${PRESETS.map(i => `<button class="ic" data-i="${i}">${i}</button>`).join('')}</div>
+    <button class="btn" onclick="saveSettings()">💾 保存</button>`;
+  document.querySelectorAll('#setPick .ic').forEach(b => b.onclick = () => { $('sIcon').value = b.dataset.i; });
+}
+async function saveSettings() {
+  const u = {};
+  const name = $('sName').value.trim().slice(0, 12), cn = $('sCap').value.trim().slice(0, 12);
+  const ic = firstChar($('sIcon').value), ci = firstChar($('sCapIcon').value);
+  if (name) u.name = name; if (cn) u.capitalName = cn; if (ic) u.icon = ic; if (ci) u.capitalIcon = ci;
+  await db.ref('nations/' + myId).update(u); toast('保存しました');
+}
 
 // ===== UI =====
 function renderPanel() {
@@ -420,18 +616,39 @@ function renderPanel() {
   if (!sel) { p.textContent = 'マスをタップして選択してください。'; return; }
   const k = sel.x + '_' + sel.y, o = tiles[k], on = nations[o];
   let h = `<h3>📍 (${sel.x}, ${sel.y})</h3>`;
+
   if (!o) {
-    const adj = minDist(sel.x, sel.y) === 1;
-    h += `どこの国でもない海です。<div class="btns"><button class="btn" ${adj ? '' : 'disabled'} onclick="expand()">🌊 領土にする(💰${expandCost()})</button></div>`;
-    if (!adj) h += '<div class="hint">自国に隣接するマスだけ拡張できます。</div>';
+    const adj1 = minDist(sel.x, sel.y) === 1;
+    h += `どこの国でもない海です。<div class="btns"><button class="btn" ${adj1 ? '' : 'disabled'} onclick="expand()">🌊 領土にする(💰${expandCost()})</button></div>`;
+    if (!adj1) h += '<div class="hint">自国に隣接するマスだけ拡張できます。</div>';
   } else if (o === myId) {
-    h += n.capital === k ? '👑 あなたの首都です。ここを奪われると国が乗っ取られます!' : 'あなたの領土です。';
+    h += n.capital === k ? `👑 あなたの首都「${esc(capName(n))}」です。ここを奪われると国が乗っ取られます!` : 'あなたの領土です。';
+    h += `<div class="hint">周囲の自国マス ${countNb(sel.x, sel.y, myId)} → 防御+${countNb(sel.x, sel.y, myId) * 10}%(領土を固めると守りが強くなります)</div>`;
+    h += forts[k] ? '<div>🧱 要塞化済み(防御+50%)</div>'
+      : `<div class="btns"><button class="btn gray" onclick="fortify()">🧱 要塞化(💰${FORT_COST})</button></div>`;
   } else {
-    const d = minDist(sel.x, sel.y), u = n.units || {};
-    h += `${on?.icon || ''} <b style="color:${on ? on.color : '#fff'}">${on ? esc(on.name) : '?'}</b> の領土${on?.capital === k ? ' 👑<b>首都</b>(防御1.5倍・陥落で国ごと乗っ取り)' : ''}${isAlly(o) ? ' 🤝同盟国' : ''}<div class="hint">領土${on?.tiles || 0}マス / 自国から距離${d}</div><div class="btns">`;
-    for (const t of ['land', 'air', 'sea'])
-      h += `<button class="btn ${t}" ${(d <= RANGE[t] && (u[t] || 0) > 0 && !isAlly(o)) ? '' : 'disabled'} onclick="attack('${t}')">${ICON[t]} ${NAME[t]}で攻撃(${u[t] || 0})</button>`;
-    h += '</div>';
+    const d = minDist(sel.x, sel.y), u = n.units || {}, ally = isAlly(o), known = isKnown(o), tr = terrain(k, o);
+    for (const T of TYPES) send[T] = d <= RANGE[T] ? Math.min(send[T] || 0, u[T] || 0) : 0;
+    const total = TYPES.reduce((s, T) => s + send[T], 0);
+    h += `${esc(on?.icon || '')} <b style="color:${on?.color || '#fff'}">${on ? esc(on.name) : '?'}</b> の領土`
+      + (tr.isCap ? ` 👑<b>首都「${esc(capName(on))}」</b>` : '') + (ally ? ' 🤝同盟国' : '')
+      + `<div class="hint">領土${on?.tiles || 0}マス / 自国から距離${d}</div>`;
+    if (ally) {
+      h += '<div class="hint">同盟国は攻撃できません。</div>';
+    } else {
+      h += TYPES.map(T => `<div class="unit"><div>${ICON[T]} ${NAME[T]}<div class="hint" style="margin:0">保有${u[T] || 0}・射程${RANGE[T]}${d <= RANGE[T] ? '' : '(圏外)'}</div></div>
+        <div class="stepper"><button class="btn" ${d <= RANGE[T] ? '' : 'disabled'} onclick="adj('${T}',-1)">−</button><b>${send[T]}</b><button class="btn" ${d <= RANGE[T] ? '' : 'disabled'} onclick="adj('${T}',1)">＋</button></div></div>`).join('');
+      h += `<div class="fc">挟撃 <b>+${tr.flank * 10}%</b>(目標に隣接する自国マス${tr.flank}) / 敵の守り <b>+${tr.fn * 10}%</b>${tr.fort ? ' / 🧱要塞+50%' : ''}${tr.isCap ? ' / 👑首都+50%' : ''}`;
+      if (known) {
+        const f = forecast(send, k, o), dd = f.def;
+        h += `<br>敵戦力(同盟援護込): 🪖${dd.land.toFixed(1)} ✈️${dd.air.toFixed(1)} 🚢${dd.sea.toFixed(1)}`;
+        if (total > 0) h += `<br>攻撃力 <b>${f.atk.toFixed(1)}</b> vs 防御力 <b>${f.dfn.toFixed(1)}</b> → ${f.win ? '<span class="win">勝利見込み</span>' : '<span class="lose">敗北見込み</span>'}<br>損害予想:自軍${Math.round(f.fa * 100)}% / 敵${Math.round(f.fd * 100)}%`;
+      } else {
+        h += `<br>🔒 敵の戦力は不明です。偵察(💰${SCOUT_COST})で90秒間見えます。`;
+      }
+      h += '</div>';
+      h += `<div class="btns"><button class="btn gray" onclick="scout('${o}')" ${known ? 'disabled' : ''}>🔍 偵察 💰${SCOUT_COST}</button><button class="btn gray" onclick="allIn()">全投入</button><button class="btn red" ${total > 0 ? '' : 'disabled'} onclick="attack()">⚔️ 攻撃!</button></div>`;
+    }
   }
   p.innerHTML = h;
 }
@@ -439,7 +656,7 @@ function renderPanel() {
 function renderStats() {
   const n = me();
   $('stats').innerHTML = n
-    ? `<span>${n.icon || ''} ${esc(n.name)}</span><span>領土 <b>${n.tiles || 0}</b></span><span>💰 <b>${n.gold || 0}</b></span><span>🪖${n.units?.land || 0} ✈️${n.units?.air || 0} 🚢${n.units?.sea || 0}</span>`
+    ? `<span>${esc(n.icon || '')} ${esc(n.name)}</span><span>領土 <b>${n.tiles || 0}</b></span><span>💰 <b>${n.gold || 0}</b></span><span>🪖${n.units?.land || 0} ✈️${n.units?.air || 0} 🚢${n.units?.sea || 0}</span>`
     : '';
   const b = $('banner');
   if (n && n.tiles <= 0) { b.style.display = 'block'; b.textContent = '👑 マップの空いている海をタップして首都を建設しよう!'; }
@@ -447,15 +664,15 @@ function renderStats() {
 }
 
 function renderRank() {
-  const list = Object.entries(nations).filter(([, n]) => (n.tiles || 0) > 0)
-    .sort((a, b) => (b[1].tiles || 0) - (a[1].tiles || 0));
+  const list = Object.entries(nations).filter(([, n]) => (n.tiles || 0) > 0).sort((a, b) => (b[1].tiles || 0) - (a[1].tiles || 0));
   const max = list.length ? list[0][1].tiles : 1;
   $('rankList').innerHTML = list.length ? list.map(([id, n], i) => `
     <div class="rank ${id === myId ? 'me' : ''}">
       <div class="no">${['🥇', '🥈', '🥉'][i] || (i + 1)}</div>
-      <div class="dot" style="background:${n.color}"></div><div style="font-size:18px">${n.icon || '🏳️'}</div>
+      <div class="dot" style="background:${n.color}"></div>
+      <div style="font-size:18px">${esc(n.icon || '🏳️')}</div>
       <div class="nm">${esc(n.name)}${id === myId ? '(あなた)' : ''}${isAlly(id) ? ' 🤝' : ''}
-        <small>🪖${n.units?.land || 0} ✈️${n.units?.air || 0} 🚢${n.units?.sea || 0}</small>
+        <small>首都:${esc(capIcon(n))}${esc(capName(n))} / ${isKnown(id) ? `🪖${n.units?.land || 0} ✈️${n.units?.air || 0} 🚢${n.units?.sea || 0}` : '🔒戦力不明'}</small>
         <div class="bar"><i style="width:${(n.tiles / max) * 100}%;background:${n.color}"></i></div></div>
       <div class="tl">${n.tiles}マス</div>
     </div>`).join('') : '<div class="hint">まだ国がありません。</div>';
@@ -463,10 +680,22 @@ function renderRank() {
 
 function renderArmy() {
   const n = me(); if (!n) return;
-  $('armyList').innerHTML = ['land', 'air', 'sea'].map(t => `
+  $('armyList').innerHTML = TYPES.map(t => `
     <div class="unit"><div>${ICON[t]} <b>${NAME[t]}</b> × ${n.units?.[t] || 0}
       <div class="hint" style="margin:0">射程 ${RANGE[t]}マス</div></div>
       <button class="btn ${t}" onclick="buy('${t}')">増強 💰${COST[t]}</button></div>`).join('');
+}
+
+function renderAlly() {
+  const n = me(); if (!n) return;
+  const others = Object.entries(nations).filter(([id, x]) => id !== myId && (x.tiles || 0) > 0);
+  $('allyList').innerHTML = others.length ? others.map(([id, x]) => {
+    const allied = n.allies && n.allies[id], theyReq = n.req && n.req[id], iReq = x.req && x.req[myId];
+    const btn = allied ? `<button class="btn red" onclick="breakAlly('${id}')">解消</button>`
+      : theyReq ? `<button class="btn" onclick="acceptAlly('${id}')">承諾</button><button class="btn red" onclick="declineAlly('${id}')">拒否</button>`
+      : iReq ? '<span class="hint">申請中…</span>' : `<button class="btn" onclick="reqAlly('${id}')">同盟申請</button>`;
+    return `<div class="unit"><div>${esc(x.icon || '🏳️')} <b style="color:${x.color}">${esc(x.name)}</b>${allied ? ' 🤝' : ''}${theyReq ? ' 📩申請あり' : ''}<div class="hint" style="margin:0">${x.tiles}マス</div></div><div class="btns" style="margin:0">${btn}</div></div>`;
+  }).join('') : '<div class="hint">同盟できる国がまだありません。</div>';
 }
 
 function renderLog() {
@@ -475,30 +704,10 @@ function renderLog() {
     : '<div class="hint">まだ出来事がありません。</div>';
 }
 
-function renderAlly() {
-  const n = me(); if (!n) return;
-  const others = Object.entries(nations).filter(([id, x]) => id !== myId && (x.tiles || 0) > 0);
-  const reqs = Object.keys(n.req || {}).filter(id => nations[id] && (nations[id].tiles || 0) > 0 && !(n.allies && n.allies[id]));
-  const rows = others.map(([id, x]) => {
-    const allied = n.allies && n.allies[id];
-    const theyReq = n.req && n.req[id];
-    const iReq = x.req && x.req[myId];
-    const btn = allied ? `<button class="btn red" onclick="breakAlly('${id}')">解消</button>`
-      : theyReq ? `<button class="btn" onclick="acceptAlly('${id}')">承諾</button><button class="btn red" onclick="declineAlly('${id}')">拒否</button>`
-      : iReq ? '<span class="hint">申請中…</span>'
-      : `<button class="btn" onclick="reqAlly('${id}')">同盟申請</button>`;
-    return `<div class="unit"><div>${x.icon || '🏳️'} <b style="color:${x.color}">${esc(x.name)}</b>${allied ? ' 🤝' : ''}${theyReq ? ' 📩申請あり' : ''}<div class="hint" style="margin:0">${x.tiles}マス</div></div><div class="btns" style="margin:0">${btn}</div></div>`;
-  }).join('');
-  $('allyBox').innerHTML = `
-    <div class="card"><h3>🏳️ 国のアイコン</h3>
-      <div class="icons">${ICONS.map(i => `<button class="ic ${n.icon === i ? 'on' : ''}" onclick="setIcon('${i}')">${i}</button>`).join('')}</div></div>
-    <div class="card"><h3>🤝 同盟</h3>${rows || '<div class="hint">同盟できる国がまだありません。</div>'}
-      <div class="hint">・同盟は双方が合意して成立します<br>・同盟国は攻撃できません(解消すれば攻撃可能)<br>・同盟国の軍隊が防衛を30%援護します<br>・首都が陥落した国は同盟も消滅します</div></div>`;
-}
+function renderAll() { renderStats(); renderRank(); renderArmy(); renderSettings(); renderAlly(); renderPanel(); draw(); }
+Object.assign(window, { expand, fortify, scout, buy, attack, adj, allIn, reqAlly, acceptAlly, declineAlly, breakAlly, saveSettings });
 
-function renderAll() { renderStats(); renderRank(); renderArmy(); renderAlly(); renderPanel(); draw(); }
-window.expand = expand; window.attack = attack; window.buy = buy;
-window.reqAlly = reqAlly; window.acceptAlly = acceptAlly; window.declineAlly = declineAlly; window.breakAlly = breakAlly; window.setIcon = setIcon;
+resize();
 </script>
 </body>
 </html>
