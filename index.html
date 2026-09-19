@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>ブロックキャノン</title>
+<title>ブロックキャノン（ランキング付き）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
@@ -19,6 +19,7 @@
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);overflow:hidden;overscroll-behavior:none}
+[hidden]{display:none !important}
 button{font-family:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
 #app{position:fixed;inset:0;display:flex;flex-direction:column;max-width:560px;margin:0 auto;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:var(--bg)}
 
@@ -84,6 +85,19 @@ h1{margin:0;font-size:38px;font-weight:900;line-height:1.05;letter-spacing:.02em
 .rscore{font-size:54px;font-weight:900;color:var(--hot2);line-height:1;text-shadow:0 0 18px rgba(255,180,50,.5)}
 .rscore small{display:block;font-size:13px;color:var(--ink-dim);font-weight:700;margin-top:4px;text-shadow:none}
 .rbest{font-size:14px;font-weight:800;min-height:20px;color:var(--cyan)}
+.nameRow{display:flex;gap:8px;width:100%}
+.nameRow input{flex:1;min-width:0;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--ink);font:inherit;font-size:16px;font-weight:800;padding:12px 14px;-webkit-user-select:text;user-select:text;outline:none}
+.nameRow input:focus{border-color:var(--hot2)}
+.nameRow .btn{width:auto;flex:0 0 auto;font-size:15px;padding:12px 14px;box-shadow:0 4px 0 #b4470a}
+.btn:disabled{opacity:.5;filter:grayscale(.6)}
+.rmsg{font-size:13px;color:var(--ink-dim);min-height:18px;line-height:1.5}
+.rlist{width:100%;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;text-align:left}
+.rlist li{display:grid;grid-template-columns:36px 1fr auto;gap:8px;align-items:center;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-weight:800;font-size:15px}
+.rlist li.me{background:rgba(255,207,63,.2);box-shadow:inset 0 0 0 1.5px var(--hot2)}
+.rlist .n{color:var(--ink-dim);text-align:center}
+.rlist li:nth-child(-n+3) .n{color:var(--hot2);font-size:18px}
+.rlist .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rlist .s{color:var(--hot2);font-variant-numeric:tabular-nums}
 .toast{position:absolute;left:50%;bottom:110px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:8px 14px;border-radius:12px;font-size:13px;z-index:20}
 @media (prefers-reduced-motion: reduce){ .rank,.val.pop{animation:none} }
 </style>
@@ -116,6 +130,7 @@ h1{margin:0;font-size:38px;font-weight:900;line-height:1.05;letter-spacing:.02em
       <div id="thumbs"></div>
       <label class="btn" for="file">📷 じぶんの画像を選ぶ</label>
       <input id="file" type="file" accept="image/*" hidden>
+      <button id="btnRankM" class="btn">🏆 ランキングを見る</button>
       <div class="legend" id="legend"></div>
       <button id="btnStart" class="btn primary">スタート</button>
       <button id="btnClose" class="btn link" hidden>とじて ゲームにもどる</button>
@@ -128,8 +143,20 @@ h1{margin:0;font-size:38px;font-weight:900;line-height:1.05;letter-spacing:.02em
       <div id="rrank" class="rank">A</div>
       <div class="rscore"><span id="rscore">0</span><small>ブロック破壊</small></div>
       <div id="rbest" class="rbest"></div>
+      <div class="nameRow"><input id="pname" maxlength="12" placeholder="なまえ（12文字まで）" autocomplete="off"><button id="btnSubmit" class="btn primary">ランキング登録</button></div>
+      <div id="rmsg" class="rmsg"></div>
+      <button id="btnRankR" class="btn">🏆 ランキングを見る</button>
       <button id="btnRetry" class="btn primary">もう一回！</button>
       <button id="btnImg" class="btn">画像をかえる</button>
+    </div>
+  </div>
+  <div id="rank" class="overlay">
+    <div class="card">
+      <div class="rlabel">🏆 ランキング TOP20</div>
+      <div id="rankmsg" class="rmsg"></div>
+      <ol id="rlist" class="rlist"></ol>
+      <div id="myrank" class="rbest"></div>
+      <button id="btnRankClose" class="btn">とじる</button>
     </div>
   </div>
   <div id="toast" class="toast" hidden></div>
@@ -417,7 +444,7 @@ function spawnBoard() {
   shuffle(cells);
   const types = {};
   let k = 0;
-  [[5, 2], [1, 11], [4, 8], [2, 5], [3, 5]].forEach(([t, n]) => { for (let i = 0; i < n; i++) types[cells[k][0] * COLS + cells[k++][1]] = t; });
+  [[5, 1], [1, 5], [4, 3], [2, 3], [3, 3]].forEach(([t, n]) => { for (let i = 0; i < n; i++) types[cells[k][0] * COLS + cells[k++][1]] = t; });
   grid = [];
   for (let r = 0; r < ROWS; r++) {
     grid[r] = [];
@@ -969,9 +996,10 @@ function bindRot(btn, dir) {
 bindRot($('btnL'), -1); bindRot($('btnR'), 1);
 
 window.addEventListener('keydown', e => {
+  if (e.target && e.target.tagName === 'INPUT') return;
   if (e.key === 'ArrowLeft') { rotKey = -1; e.preventDefault(); }
   else if (e.key === 'ArrowRight') { rotKey = 1; e.preventDefault(); }
-  else if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { if (!$('menu').classList.contains('show') && !$('result').classList.contains('show')) { Snd.init(); fire(); e.preventDefault(); } }
+  else if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { if (!document.querySelector('.overlay.show')) { Snd.init(); fire(); e.preventDefault(); } }
 });
 window.addEventListener('keyup', e => { if ((e.key === 'ArrowLeft' && rotKey < 0) || (e.key === 'ArrowRight' && rotKey > 0)) rotKey = 0; });
 window.addEventListener('blur', () => { down = null; fireDown = null; rotBtn = 0; rotKey = 0; btnFire.classList.remove('hold'); });
@@ -1039,10 +1067,11 @@ function startGame() {
 function showResult() {
   const hi = score > best; if (hi) { best = score; saveBest(); }
   bestEl.textContent = best;
-  const rank = score >= 220 ? 'S' : score >= 160 ? 'A' : score >= 100 ? 'B' : score >= 60 ? 'C' : 'D';
+  const rank = score >= 200 ? 'S' : score >= 140 ? 'A' : score >= 95 ? 'B' : score >= 60 ? 'C' : 'D';
   $('rrank').textContent = rank; $('rscore').textContent = score;
   $('rbest').textContent = hi ? '🎉 ベスト更新！' : `ベスト ${best}`;
   const rk = $('rrank'); rk.style.animation = 'none'; void rk.offsetWidth; rk.style.animation = '';
+  lastScore = score; $('rmsg').textContent = ''; $('btnSubmit').disabled = false;
   resultEl.classList.add('show');
   Snd.result(rank === 'S' || rank === 'A');
 }
@@ -1052,6 +1081,51 @@ $('btnMenu').addEventListener('click', () => { Snd.init(); Snd.ui(); openMenu();
 $('btnRetry').addEventListener('click', startGame);
 $('btnImg').addEventListener('click', () => { Snd.ui(); resultEl.classList.remove('show'); openMenu(); $('btnClose').hidden = true; });
 $('btnSound').addEventListener('click', () => { Snd.init(); const m = Snd.toggle(); $('btnSound').textContent = m ? '🔇' : '🔊'; if (!m) Snd.ui(); });
+
+/* --- ランキング (Firebase Firestore) --- */
+let lastScore = 0;
+const pname = $('pname'), rmsg = $('rmsg'), rankEl = $('rank');
+try { pname.value = localStorage.getItem('blockcannon_name') || ''; } catch (e) {}
+function whenRank(ms) {
+  return new Promise(res => { const t0 = Date.now(); (function p() { if (window.Rank) return res(window.Rank); if (Date.now() - t0 > ms) return res(null); setTimeout(p, 150); })(); });
+}
+async function openRank() {
+  rankEl.classList.add('show');
+  const list = $('rlist'), msg = $('rankmsg'), my = $('myrank');
+  list.textContent = ''; my.textContent = ''; msg.textContent = '読み込み中…';
+  const R = await whenRank(4000);
+  if (!R) { msg.textContent = 'ランキングに接続できません（Firebaseを読み込めませんでした）'; return; }
+  try {
+    const res = await R.top(20);
+    msg.textContent = res.rows.length ? '' : 'まだ誰も登録していません。1位を狙おう！';
+    res.rows.forEach((row, i) => {
+      const li = document.createElement('li'); if (row.id === res.pid) li.className = 'me';
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = i + 1;
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = row.name || '???';
+      const sc = document.createElement('span'); sc.className = 's'; sc.textContent = row.score;
+      li.append(n, nm, sc); list.appendChild(li);
+    });
+    if (res.mine && res.mine.rank > 20) my.textContent = `あなたは ${res.mine.rank}位（${res.mine.score}ブロック）`;
+  } catch (e) { console.error(e); msg.textContent = '読み込みに失敗しました。Firestoreのルール設定を確認してください'; }
+}
+async function submitScore() {
+  const name = pname.value.trim().slice(0, 12);
+  if (!name) { rmsg.textContent = 'なまえを入力してください'; pname.focus(); return; }
+  try { localStorage.setItem('blockcannon_name', name); } catch (e) {}
+  const btn = $('btnSubmit'); btn.disabled = true; rmsg.textContent = '送信中…';
+  const R = await whenRank(4000);
+  if (!R) { rmsg.textContent = 'ランキングに接続できません'; btn.disabled = false; return; }
+  try {
+    const r = await R.submit(name, lastScore);
+    rmsg.textContent = r.improved ? 'ランキングに登録しました！' : `あなたの最高記録は ${r.best} です（今回は更新なし）`;
+    Snd.ui(); openRank();
+  } catch (e) { console.error(e); rmsg.textContent = '送信に失敗しました。通信とFirestoreのルールを確認してください'; btn.disabled = false; }
+}
+$('btnSubmit').addEventListener('click', () => { Snd.init(); submitScore(); });
+pname.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); pname.blur(); submitScore(); } });
+$('btnRankM').addEventListener('click', () => { Snd.init(); Snd.ui(); openRank(); });
+$('btnRankR').addEventListener('click', () => { Snd.init(); Snd.ui(); openRank(); });
+$('btnRankClose').addEventListener('click', () => { Snd.ui(); rankEl.classList.remove('show'); });
 
 /* ================= メインループ ================= */
 let last = performance.now();
@@ -1073,6 +1147,72 @@ loadBest(); updateShots(); resize();
 spawnBoard(); state = 'title';
 requestAnimationFrame(frame);
 })();
+</script>
+
+<script type="module">
+/*
+  ランキング用 Firebase (Firestore)
+  ・コレクション: blockcannon_scores  ／ ドキュメントID: 端末ごとのランダムID（自己ベストのみ保存）
+  ・Firestoreのルールは同梱の firestore.rules を Firebase コンソールに貼り付けてください
+  ・このファイルは Firebase Hosting などご自身のサイトに置いて開いてください
+*/
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, getDocs, where, getCountFromServer, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyASxo79YBtkxBWRFWzQtIoFdWw9iegkomI",
+  authDomain: "haikyo-61102.firebaseapp.com",
+  projectId: "haikyo-61102",
+  storageBucket: "haikyo-61102.firebasestorage.app",
+  messagingSenderId: "193210205676",
+  appId: "1:193210205676:web:6977fc30bf4b9084a82cc9",
+  measurementId: "G-ES8PVYT8MH"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const COL = 'blockcannon_scores';
+
+function playerId() {
+  let id = null;
+  try { id = localStorage.getItem('blockcannon_pid'); } catch (e) {}
+  if (!id) {
+    id = ((crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2))).replace(/-/g, '').slice(0, 28);
+    try { localStorage.setItem('blockcannon_pid', id); } catch (e) {}
+  }
+  return id;
+}
+
+window.Rank = {
+  async submit(name, score) {
+    const ref = doc(db, COL, playerId());
+    const snap = await getDoc(ref);
+    const prev = snap.exists() ? (snap.data().score | 0) : -1;
+    const best = Math.max(prev, score | 0);
+    await setDoc(ref, { name, score: best, updatedAt: serverTimestamp() });
+    return { improved: score > prev, best };
+  },
+  async top(n) {
+    const snap = await getDocs(query(collection(db, COL), orderBy('score', 'desc'), limit(n)));
+    const rows = snap.docs.map(d => ({ id: d.id, name: d.data().name, score: d.data().score }));
+    const me = playerId();
+    let mine = null;
+    const idx = rows.findIndex(r => r.id === me);
+    if (idx >= 0) mine = { score: rows[idx].score, rank: idx + 1 };
+    else {
+      try {
+        const s = await getDoc(doc(db, COL, me));
+        if (s.exists()) {
+          const sc = s.data().score;
+          const c = await getCountFromServer(query(collection(db, COL), where('score', '>', sc)));
+          mine = { score: sc, rank: c.data().count + 1 };
+        }
+      } catch (e) {}
+    }
+    return { rows, pid: me, mine };
+  }
+};
 </script>
 </body>
 </html>
