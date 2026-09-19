@@ -1,349 +1,179 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>大海原の建国 | Ocean Nations</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<script src="https://cdn.jsdelivr.net/npm/firebase@10.13.2/firebase-app-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@10.13.2/firebase-auth-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@10.13.2/firebase-database-compat.js"></script>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>海上戦争</title>
 <style>
-:root{
-  --deep:#071b2c;
-  --sea:#0d3a57;
-  --sea-light:#134a6b;
-  --foam:#eaf4fb;
-  --foam-dim:#a9c3d4;
-  --sand:#e8b84b;
-  --sand-deep:#c99a34;
-  --coral:#c1443d;
-  --kelp:#4e9f7b;
-  --line:rgba(234,244,251,0.08);
-}
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
-body{
-  background:
-    radial-gradient(ellipse at 20% -10%, #0f4562 0%, transparent 55%),
-    radial-gradient(ellipse at 90% 110%, #0a2f47 0%, transparent 55%),
-    linear-gradient(180deg,var(--deep),#051220 100%);
-  color:var(--foam);
-  font-family:'Inter',sans-serif;
-  min-height:100vh;
-}
-h1,h2,h3,.serif{font-family:'Spectral',serif;}
-
-/* ---- top bar ---- */
-header{
-  padding:18px 20px 0 20px;
-}
-.title-row{
-  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
-  margin-bottom:14px;
-}
-.title-row h1{font-size:22px;font-weight:600;margin:0;letter-spacing:0.3px;}
-.title-row span{color:var(--foam-dim);font-size:13px;}
-
-nav.tabs{
-  display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;
-}
-nav.tabs button{
-  background:none;border:none;color:var(--foam-dim);
-  font-family:'Inter',sans-serif;font-size:14px;font-weight:600;
-  padding:10px 16px;cursor:pointer;white-space:nowrap;
-  border-bottom:2px solid transparent;
-  transition:color .15s, border-color .15s;
-}
-nav.tabs button:hover{color:var(--foam);}
-nav.tabs button.active{color:var(--sand);border-bottom-color:var(--sand);}
-
-main{padding:16px 20px 60px 20px;max-width:1180px;margin:0 auto;}
-.view{display:none;}
-.view.active{display:block;}
-
-/* ---- layout: map + side panel ---- */
-.game-layout{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;}
-.map-wrap{
-  background:linear-gradient(180deg,var(--sea),var(--deep));
-  border:1px solid var(--line);
-  border-radius:10px;
-  padding:14px;
-  overflow:auto;
-  max-width:100%;
-}
-.grid{
-  display:grid;
-  gap:2px;
-  background:rgba(0,0,0,0.25);
-}
-.tile{
-  width:26px;height:26px;
-  background:var(--sea-light);
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;line-height:1;
-  border-radius:3px;
-  cursor:pointer;
-  position:relative;
-  user-select:none;
-  transition:filter .1s, transform .1s;
-}
-.tile:hover{filter:brightness(1.25);transform:scale(1.08);z-index:2;}
-.tile.capital::after{
-  content:"";
-  position:absolute;inset:0;
-  border-radius:3px;
-  outline:2px solid var(--sand);
-  outline-offset:-2px;
-}
-
-.side{
-  flex:1 1 260px;min-width:250px;
-  display:flex;flex-direction:column;gap:14px;
-}
-.card{
-  background:rgba(255,255,255,0.03);
-  border:1px solid var(--line);
-  border-radius:10px;
-  padding:16px;
-}
-.card h3{margin:0 0 10px 0;font-size:15px;font-weight:600;color:var(--foam);}
-.nation-badge{
-  display:flex;align-items:center;gap:10px;margin-bottom:10px;
-}
-.nation-swatch{
-  width:38px;height:38px;border-radius:8px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;font-weight:700;color:#fff;
-  box-shadow:0 0 0 2px rgba(255,255,255,0.15) inset;
-}
-.nation-meta .name{font-weight:600;font-size:15px;}
-.nation-meta .stat{color:var(--foam-dim);font-size:12.5px;}
-
-.mode-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
-.mode-btn{
-  flex:1 1 auto;
-  background:var(--sea-light);border:1px solid var(--line);
-  color:var(--foam);border-radius:7px;padding:9px 6px;
-  font-size:12.5px;font-weight:600;cursor:pointer;text-align:center;
-}
-.mode-btn.active{background:var(--sand);color:#1a1204;border-color:var(--sand);}
-.mode-btn.war.active{background:var(--coral);color:#fff;border-color:var(--coral);}
-
-.hint{font-size:12.5px;color:var(--foam-dim);margin-top:8px;line-height:1.5;}
-.cooldown{font-size:12px;color:var(--sand);margin-top:6px;min-height:16px;}
-
-button.primary{
-  background:var(--sand);color:#1a1204;border:none;border-radius:7px;
-  padding:10px 14px;font-weight:700;font-size:13.5px;cursor:pointer;
-}
-button.primary:hover{background:var(--sand-deep);}
-button.ghost{
-  background:none;border:1px solid var(--line);color:var(--foam-dim);
-  border-radius:7px;padding:8px 12px;font-size:12.5px;cursor:pointer;
-}
-button.ghost:hover{color:var(--foam);}
-button.danger{
-  background:none;border:1px solid rgba(193,68,61,0.5);color:var(--coral);
-  border-radius:7px;padding:8px 12px;font-size:12px;cursor:pointer;
-}
-
-input,select{
-  width:100%;background:var(--deep);border:1px solid var(--line);
-  color:var(--foam);border-radius:6px;padding:9px 10px;font-size:14px;
-  font-family:'Inter',sans-serif;margin-top:4px;
-}
-label{font-size:12.5px;color:var(--foam-dim);display:block;margin-top:10px;}
-input[type=color]{padding:3px;height:38px;cursor:pointer;}
-
-/* founding overlay */
-.overlay{
-  position:fixed;inset:0;background:rgba(4,12,20,0.82);
-  display:flex;align-items:center;justify-content:center;z-index:50;
-  padding:20px;
-}
-.found-box{
-  background:var(--sea);border:1px solid var(--line);border-radius:12px;
-  padding:26px;max-width:380px;width:100%;
-}
-.found-box h2{margin:0 0 6px 0;font-size:20px;}
-.found-box p{color:var(--foam-dim);font-size:13px;margin:0 0 4px 0;line-height:1.6;}
-
-/* ranking */
-table{width:100%;border-collapse:collapse;font-size:13.5px;}
-th{text-align:left;color:var(--foam-dim);font-weight:600;font-size:12px;padding:6px 8px;border-bottom:1px solid var(--line);}
-td{padding:9px 8px;border-bottom:1px solid var(--line);}
-tr.me{background:rgba(232,184,75,0.08);}
-.rank-num{color:var(--foam-dim);width:26px;}
-.chip{
-  display:inline-flex;align-items:center;gap:7px;
-}
-.chip .dot{
-  width:22px;height:22px;border-radius:6px;color:#fff;font-size:12px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-
-/* alliance list */
-.alliance-list{display:flex;flex-direction:column;gap:8px;}
-.alliance-row{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  background:rgba(255,255,255,0.03);border:1px solid var(--line);
-  border-radius:8px;padding:10px 12px;font-size:13px;
-}
-.alliance-row .who{display:flex;align-items:center;gap:8px;}
-
-/* war log */
-.log-row{
-  padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;
-  color:var(--foam-dim);
-}
-.log-row b{color:var(--foam);}
-.log-row.annex b.def{color:var(--coral);}
-
-.empty{color:var(--foam-dim);font-size:13px;padding:20px 4px;text-align:center;}
-
-.rules ul{padding-left:20px;line-height:1.85;font-size:14px;}
-.rules h3{margin-top:22px;color:var(--sand);}
-.rules b{color:var(--foam);}
-
-@media (max-width:640px){
-  .tile{width:22px;height:22px;font-size:11px;}
-}
+:root{--bg:#06172b;--panel:#0e2a47;--line:#1f4a75;--text:#e8f4ff;--sub:#8fb4d6;--accent:#ffd54a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;min-height:100vh}
+header{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:2px solid var(--line)}
+.top{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px;flex-wrap:wrap}
+.top h1{font-size:17px;margin:0}
+#stats{font-size:12px;color:var(--sub);display:flex;gap:10px;flex-wrap:wrap}
+#stats b{color:var(--accent)}
+nav{display:flex;overflow-x:auto}
+nav button{flex:1 0 auto;padding:11px 10px;background:none;border:0;border-bottom:3px solid transparent;color:var(--sub);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--text);border-bottom-color:var(--accent);background:#12365a}
+main{max-width:900px;margin:0 auto;padding:10px}
+section{display:none}section.on{display:block}
+#mapwrap{position:relative;height:60vh;min-height:340px;border:2px solid var(--line);border-radius:10px;overflow:hidden;background:#08213a}
+#cv{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.mctl{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px}
+.mctl button{width:38px;height:38px;border-radius:10px;border:0;background:#0e2a47dd;color:#fff;font-size:18px;font-weight:700;cursor:pointer}
+#mini{position:absolute;left:8px;bottom:8px;width:120px;height:84px;border:2px solid #fff8;border-radius:6px;touch-action:none}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:14px}
+.card h3{margin:0 0 6px;font-size:15px}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.btn{background:#1a5c94;color:#fff;border:0;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.4}
+.btn.land{background:#2e7d32}.btn.air{background:#6a4bc4}.btn.sea{background:#0277bd}.btn.red{background:#c62828}.btn.gray{background:#456}
+.rank{display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid var(--line)}
+.rank.me{background:#173f66;border-radius:8px}
+.rank .no{width:34px;text-align:center;font-weight:800;font-size:16px}
+.rank .dot{width:14px;height:14px;border-radius:50%;flex:none;border:2px solid #fff5}
+.rank .nm{flex:1;min-width:0}
+.rank .nm small{display:block;color:var(--sub);font-size:11px}
+.bar{height:6px;background:#0006;border-radius:3px;margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%}
+.rank .tl{font-weight:800;color:var(--accent);white-space:nowrap}
+.log{font-size:13px;padding:6px 4px;border-bottom:1px solid var(--line)}
+.log small{color:var(--sub);margin-right:6px}
+.unit{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.unit:last-child{border:0}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper .btn{width:38px;padding:8px 0;font-size:16px}
+.stepper b{min-width:26px;text-align:center;font-size:17px}
+.fc{background:#0a2238;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px;line-height:1.7}
+.win{color:#69f0ae;font-weight:800}.lose{color:#ff8a80;font-weight:800}
+.icons{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.ic{font-size:20px;width:38px;height:38px;border-radius:10px;border:2px solid var(--line);background:#06172b;cursor:pointer}
+input[type=text]{width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:#06172b;color:var(--text);font-size:16px;margin:4px 0 8px}
+input.one{width:70px;text-align:center;font-size:22px}
+label{font-size:12px;color:var(--sub);display:block}
+.row2{display:flex;gap:12px;flex-wrap:wrap}
+#overlay{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:50;padding:16px;overflow:auto}
+#overlay .box{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:20px;max-width:400px;width:100%}
+.rule{background:#0a2238;border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-top:8px;font-size:13px;line-height:1.85}
+.rule b.t{display:block;font-size:14px;color:var(--accent);margin-bottom:2px}
+.tri{text-align:center;font-size:17px;font-weight:800;margin:4px 0;letter-spacing:1px}
+.ex{background:#173f66;border-radius:6px;padding:6px 8px;margin-top:4px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#000d;padding:9px 16px;border-radius:20px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:60;max-width:90%}
+#toast.show{opacity:1}
+.hint{color:var(--sub);font-size:12px;margin-top:6px;line-height:1.7}
+.banner{background:#7a5b00;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px;display:none}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="title-row">
-    <h1>大海原の建国</h1>
-    <span>Ocean Nations — 領土を広げ、同盟を結び、戦い抜け</span>
+  <div class="top">
+    <h1>🌊 海上戦争</h1>
+    <div id="stats"></div>
   </div>
-  <nav class="tabs">
-    <button data-tab="map" class="active">🗺️ マップ</button>
-    <button data-tab="ranking">🏆 ランキング</button>
-    <button data-tab="alliance">🤝 同盟</button>
-    <button data-tab="warlog">⚔️ 戦況ログ</button>
-    <button data-tab="rules">📜 ルール</button>
+  <nav id="tabs">
+    <button data-tab="map" class="on">🗺️ マップ</button>
+    <button data-tab="rank">🏆 ランキング</button>
+    <button data-tab="army">⚔️ 軍隊</button>
+    <button data-tab="ally">🏳️ 国・同盟</button>
+    <button data-tab="log">📜 戦況</button>
   </nav>
 </header>
 
 <main>
+  <div class="banner" id="banner"></div>
 
-  <!-- MAP VIEW -->
-  <div class="view active" id="view-map">
-    <div class="game-layout">
-      <div class="map-wrap">
-        <div class="grid" id="grid"></div>
+  <section id="s-map" class="on">
+    <div id="mapwrap">
+      <canvas id="cv"></canvas>
+      <div class="mctl">
+        <button id="zIn">＋</button>
+        <button id="zOut">－</button>
+        <button id="zAll" title="海全体">🌐</button>
+        <button id="zHome" title="自分の首都">🏠</button>
       </div>
-      <div class="side">
-        <div class="card" id="nationCard"></div>
-        <div class="card" id="actionCard" style="display:none;">
-          <h3>行動を選ぶ</h3>
-          <div class="mode-row">
-            <button class="mode-btn active" data-mode="expand">➕ 拡張</button>
-            <button class="mode-btn war" data-mode="land">⚔️ 陸攻撃</button>
-            <button class="mode-btn war" data-mode="sea">🌊 海攻撃</button>
-            <button class="mode-btn war" data-mode="air">✈️ 空爆</button>
-          </div>
-          <div class="hint" id="modeHint"></div>
-          <div class="cooldown" id="cooldownText"></div>
-        </div>
-      </div>
+      <canvas id="mini" width="120" height="84"></canvas>
     </div>
-  </div>
+    <div class="hint">ドラッグ/スワイプで移動、ピンチ・ホイール・＋－で拡大縮小、🌐で海全体、左下のミニマップをタップでジャンプ</div>
+    <div class="card" id="panel">マスをタップして選択してください。</div>
+  </section>
 
-  <!-- RANKING VIEW -->
-  <div class="view" id="view-ranking">
+  <section id="s-rank">
+    <div class="card"><h3>🏆 領土ランキング(広い順)</h3><div id="rankList"></div></div>
+  </section>
+
+  <section id="s-army">
     <div class="card">
-      <h3>領土ランキング</h3>
-      <table>
-        <thead><tr><th>#</th><th>国</th><th>タイル数</th><th>首都</th><th>同盟数</th></tr></thead>
-        <tbody id="rankingBody"></tbody>
-      </table>
+      <h3>軍隊を増強する</h3>
+      <div id="armyList"></div>
     </div>
-  </div>
-
-  <!-- ALLIANCE VIEW -->
-  <div class="view" id="view-alliance">
     <div class="card">
-      <h3>受信中の同盟申請</h3>
-      <div class="alliance-list" id="incomingRequests"></div>
-    </div>
-    <div class="card" style="margin-top:14px;">
-      <h3>現在の同盟国</h3>
-      <div class="alliance-list" id="currentAllies"></div>
-    </div>
-    <div class="card" style="margin-top:14px;">
-      <h3>他国に同盟を申請する</h3>
-      <div class="alliance-list" id="otherNations"></div>
-    </div>
-  </div>
+      <h3>🧠 海上戦争のルール</h3>
+      <div class="hint" style="margin:0 0 4px">運はなし。兵の「強さ」の合計を比べて、大きいほうが勝ちます。</div>
 
-  <!-- WAR LOG VIEW -->
-  <div class="view" id="view-warlog">
-    <div class="card">
-      <h3>戦況ログ（直近）</h3>
-      <div id="logList"></div>
-    </div>
-  </div>
+      <div class="rule"><b class="t">① 3つの兵種</b>
+        🪖 <b>陸軍</b> 強さ1 / 💰20 / 射程:となり … 弱いけど安い<br>
+        🚢 <b>海軍</b> 強さ2 / 💰45 / 射程3マス … ふつう、少し高い<br>
+        ✈️ <b>空軍</b> 強さ4 / 💰100 / 射程6マス … 最強だけど高い<br>
+        💡 数で押すなら陸、遠くまで届く少数精鋭なら空</div>
 
-  <!-- RULES VIEW -->
-  <div class="view" id="view-rules">
-    <div class="card rules">
-      <h3 style="margin-top:0;">建国する</h3>
-      <ul>
-        <li>まだ国を持っていない人は、名前・<b>1文字のアイコン</b>・国の色を決めて、マップ上の空いているマス（海）をクリックすると建国できます。</li>
-        <li>最初に置いたマスがその国の<b>首都</b>になります（星の枠で表示）。</li>
-      </ul>
-      <h3>拡張</h3>
-      <ul>
-        <li>自国の領土に<b>上下左右で隣接</b>する空きマスをクリックすると、自国の領土として取り込めます。</li>
-      </ul>
-      <h3>戦争のルール</h3>
-      <ul>
-        <li><b>⚔️ 陸攻撃</b>：自国の領土に隣接している敵国のマスだけを攻撃できます。成功すると即座にそのマスを奪い、自国の領土になります。</li>
-        <li><b>🌊 海攻撃</b>：自国に隣接していなくても、海（無所属のマス）に面した敵の<b>沿岸マス</b>ならどこでも攻撃・占領できます。</li>
-        <li><b>✈️ 空爆</b>：距離に関係なくマップ上のどのマスも攻撃できますが、占領はできず、そのマスを<b>無所属の海に戻す</b>だけです。<b>首都は空爆から保護されており破壊できません。</b></li>
-        <li>同盟を結んでいる国同士は、どの攻撃手段でもお互いを攻撃できません。</li>
-        <li>連続で行動しすぎないよう、行動には数秒のクールタイムがあります。</li>
-      </ul>
-      <h3>首都陥落＝乗っ取り</h3>
-      <ul>
-        <li>陸攻撃または海攻撃で<b>敵の首都マスを奪う</b</li>と、その瞬間に敵国は滅亡し、<b>その国が持っていた全領土がまるごと攻撃側のものになります</b>。
-        <li>国を失ったプレイヤーは、また新しい国を建国できます。</li>
-      </ul>
-      <h3>同盟</h3>
-      <ul>
-        <li>「同盟」タブから他国に申請を送り、相手が承認すると同盟成立です。</li>
-        <li>同盟中はお互いに攻撃不可。いつでも同盟を解消できます（解消後は再び攻撃対象になります）。</li>
-      </ul>
-    </div>
-  </div>
+      <div class="rule"><b class="t">② 勝ち負けの決め方</b>
+        あなたの強さ(出撃した部隊の強さの合計) &gt; 敵の強さ(守っている全部隊の合計 + 民兵1) → <b>勝ち</b><br>
+        同じか小さい → <b>負け</b>(同じ場合は守る側の勝ち)
+        <div class="ex">例:空軍2部隊(4×2=<b>8</b>)で攻撃<br>
+        敵:陸軍5部隊(1×5) + 民兵1 = <b>6</b> → <b>勝ち!</b></div></div>
 
+      <div class="rule"><b class="t">③ 場所のボーナス</b>
+        ⚔️ 攻撃側:目標マスの<b>まわりに自国マス</b>があるほど +10%ずつ(挟み撃ち)<br>
+        🛡️ 守備側:まわりに<b>自分のマス</b>があるほど +10%ずつ<br>
+        🧱 要塞化したマスは +50%、👑 首都は +50%<br>
+        👉 領土は飛び地にせず、まとめて固めると守りが強い</div>
+
+      <div class="rule"><b class="t">④ 出撃と残し方</b>
+        出撃させた部隊だけが攻撃に使われ、<b>残した部隊は自国の守り</b>になります。全部送ると守りが薄くなるので注意!</div>
+
+      <div class="rule"><b class="t">⑤ 偵察(🔍💰15)</b>
+        最初は敵の兵力が見えません(🔒)。偵察すると<b>90秒間</b>、敵の兵力と「勝てるか」の判定が見えます。</div>
+
+      <div class="rule"><b class="t">⑥ 戦いのあと</b>
+        勝ち:1マス奪う(首都なら<b>国ごと乗っ取り</b>)/ 負け:守られて終わり<br>
+        接戦ほど双方の兵の損害が大きく、圧勝ほど損害は小さい<br>
+        🤝 同盟国の軍隊は、守る側を30%の強さで助けてくれる</div>
+    </div>
+  </section>
+
+  <section id="s-ally">
+    <div class="card" id="setBox"></div>
+    <div class="card"><h3>🤝 同盟</h3><div id="allyList"></div>
+      <div class="hint">・同盟は双方が合意して成立/いつでも解消可能<br>・同盟国は攻撃できず、防衛を30%援護します<br>・首都が陥落した国の同盟は消滅します</div></div>
+  </section>
+
+  <section id="s-log">
+    <div class="card"><h3>📜 最新の出来事</h3><div id="logList"></div></div>
+  </section>
 </main>
 
-<div class="overlay" id="foundOverlay">
-  <div class="found-box">
-    <h2 id="foundTitle">新しい国を築く</h2>
-    <p id="foundSub">名前・アイコン・色を決めたら、マップのタブに移動して、海の上の空いているマスをクリックして首都を置いてください。</p>
+<div id="overlay">
+  <div class="box">
+    <h2 style="margin:0 0 8px">🏝️ 建国しよう</h2>
     <label>国名</label>
-    <input id="foundName" maxlength="16" placeholder="例：サンゴ王国">
-    <label>アイコン（1文字）</label>
-    <input id="foundIcon" maxlength="2" placeholder="例：★" style="text-align:center;font-size:18px;">
-    <label>国の色</label>
-    <input id="foundColor" type="color" value="#4e9f7b">
-    <div style="margin-top:18px;display:flex;gap:8px;">
-      <button class="primary" id="foundConfirm" style="flex:1;">この内容で建国準備をする</button>
+    <input type="text" id="nName" maxlength="12" placeholder="例:エッグ王国">
+    <div class="row2">
+      <div><label>国の色</label><input type="color" id="nColor" value="#ff7043" style="width:60px;height:42px;border:0;background:none"></div>
+      <div><label>国のアイコン(好きな1文字)</label><input type="text" class="one" id="nIcon" value="🥚"></div>
     </div>
-    <p style="margin-top:12px;font-size:12px;" id="foundStatus"></p>
+    <div class="icons" id="iconPick"></div>
+    <label>首都の名前(あとで変更できます)</label>
+    <input type="text" id="nCap" maxlength="12" placeholder="例:エッグシティ">
+    <button class="btn" id="nGo" style="width:100%;font-size:15px;padding:12px">建国する</button>
   </div>
 </div>
+<div id="toast"></div>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
+// ===== Firebase =====
 const firebaseConfig = {
   apiKey: "AIzaSyCPXBVbdVCYHdop8KTlEQ310p2ZGPIoL04",
   authDomain: "egg-man-8980e.firebaseapp.com",
@@ -354,463 +184,550 @@ const firebaseConfig = {
   appId: "1:664061097830:web:248329aa1cfadfb6d4baa7",
   measurementId: "G-9G3C4S54YS"
 };
+
+const $ = id => document.getElementById(id);
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>e.classList.remove('show'),2400)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function firstChar(s){
+  s = (s || '').trim(); if (!s) return null;
+  if (window.Intl && Intl.Segmenter) { const it = new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(s)[Symbol.iterator]().next(); return it.value.segment; }
+  return Array.from(s)[0];
+}
+
+if (typeof firebase === 'undefined') {
+  document.body.innerHTML = '<div style="padding:30px">Firebaseを読み込めませんでした。ネット接続と、http(s)で開いているか確認してください。</div>';
+  throw new Error('firebase not loaded');
+}
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.database();
 
-const ROWS = 18, COLS = 26;
-const COOLDOWN_MS = 2500;
+// ===== 設定 =====
+const W = 80, H = 56, C = 24;                 // 海の広さ(マス)/ 1マスの基準px
+const TYPES = ['land', 'sea', 'air'];
+const COST = { land: 20, sea: 45, air: 100 };          // 陸:安い / 海:少し高い / 空:高い
+const POW = { land: 1, sea: 2, air: 4 };               // 1部隊あたりの強さ
+const DESC = { land: '弱いが安い', sea: '標準・少し高い', air: '最強だが高い' };
+const NAME = { land: '陸軍', air: '空軍', sea: '海軍' };
+const ICON = { land: '🪖', air: '✈️', sea: '🚢' };
+const RANGE = { land: 1, sea: 3, air: 6 };
+const COOLDOWN = 4000, SCOUT_COST = 15, SCOUT_MS = 90000, FORT_COST = 25;
+const PRESETS = ['🥚','🐉','🦅','🦁','🐺','🐻','🦈','🐙','🦊','🐢','🐘','🌸','⭐','🔥','⚓','👑','🏯','🌙'];
+const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
 
-let myUid = null;
-let myCountryId = localStorage.getItem('oceanNationsCountryId') || null;
-let countriesData = {};
-let tilesData = {};
-let alliancesData = {};
-let requestsData = {};
-let mode = 'expand';
-let foundingArmed = false;
+let myId = localStorage.getItem('umiNationId');
+let nations = {}, tiles = {}, forts = {}, logs = [];
+let sel = null, lastAtk = 0, send = { land: 0, air: 0, sea: 0 };
+const scoutUntil = {};
 
-/* ---------------- Auth ---------------- */
-auth.signInAnonymously().catch(err=>{
-  document.getElementById('foundStatus').textContent = '認証エラー: '+err.message;
-});
-auth.onAuthStateChanged(user=>{
-  if(!user) return;
-  myUid = user.uid;
-  attachListeners();
-});
+const me = () => nations[myId];
+const expandCost = () => 8 + Math.floor((me()?.tiles || 0) * 0.5);
+const isAlly = id => !!(me() && me().allies && me().allies[id]);
+const isKnown = id => id === myId || isAlly(id) || (scoutUntil[id] || 0) > Date.now();
+const capName = n => (n && n.capitalName) || '首都';
+const capIcon = n => (n && (n.capitalIcon || '🏛️'));
 
-/* ---------------- Build grid DOM once ---------------- */
-const gridEl = document.getElementById('grid');
-gridEl.style.gridTemplateColumns = `repeat(${COLS}, 26px)`;
-const tileEls = {};
-for(let r=0;r<ROWS;r++){
-  for(let c=0;c<COLS;c++){
-    const key = r+'_'+c;
-    const div = document.createElement('div');
-    div.className='tile';
-    div.dataset.r=r; div.dataset.c=c;
-    div.addEventListener('click', ()=>onTileClick(r,c));
-    gridEl.appendChild(div);
-    tileEls[key]=div;
-  }
-}
-
-/* ---------------- Firebase listeners ---------------- */
-function attachListeners(){
-  db.ref('countries').on('value', snap=>{
-    countriesData = snap.val() || {};
-    if(myCountryId && !countriesData[myCountryId]){
-      // our nation was annexed / no longer exists
-      myCountryId = null;
-      localStorage.removeItem('oceanNationsCountryId');
-      document.getElementById('foundTitle').textContent = 'あなたの国は滅亡しました';
-      document.getElementById('foundSub').textContent = '新しい名前・アイコン・色で再建国できます。準備ができたらマップの空きマスをクリックしてください。';
-    }
-    renderAll();
-  });
-  db.ref('tiles').on('value', snap=>{
-    tilesData = snap.val() || {};
-    renderAll();
-  });
-  db.ref('alliances').on('value', snap=>{
-    alliancesData = snap.val() || {};
-    renderAll();
-  });
-  db.ref('allianceRequests').on('value', snap=>{
-    requestsData = snap.val() || {};
-    renderAll();
-  });
-  db.ref('battleLog').orderByKey().limitToLast(40).on('value', snap=>{
-    renderLog(snap.val() || {});
-  });
-}
-
-/* ---------------- Helpers ---------------- */
-function pairKey(a,b){ return [a,b].sort().join('__'); }
-function isAllied(a,b){ return !!alliancesData[pairKey(a,b)]; }
-function neighbors(r,c){
-  const list=[];
-  [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc])=>{
-    if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS) list.push(nr+'_'+nc);
-  });
-  return list;
-}
-function tileCounts(){
-  const counts={};
-  Object.values(tilesData).forEach(t=>{
-    if(t && t.owner) counts[t.owner]=(counts[t.owner]||0)+1;
-  });
-  return counts;
-}
-function myLastActionAt(){
-  return (myCountryId && countriesData[myCountryId] && countriesData[myCountryId].lastActionAt) || 0;
-}
-function cooldownRemaining(){
-  return Math.max(0, COOLDOWN_MS - (Date.now() - myLastActionAt()));
-}
-function pushLog(entry){
-  db.ref('battleLog').push({time:Date.now(), ...entry});
-}
-
-/* ---------------- Founding flow ---------------- */
-document.getElementById('foundConfirm').addEventListener('click', ()=>{
-  const name = document.getElementById('foundName').value.trim();
-  const icon = document.getElementById('foundIcon').value.trim();
-  const color = document.getElementById('foundColor').value;
-  if(!name){ document.getElementById('foundStatus').textContent='国名を入力してください。'; return; }
-  if(!icon){ document.getElementById('foundStatus').textContent='アイコンを1文字入力してください。'; return; }
-  window.__pendingFound = {name, icon, color};
-  foundingArmed = true;
-  document.getElementById('foundOverlay').style.display='none';
-  showTab('map');
-  document.getElementById('foundStatusFloating') && (document.getElementById('foundStatusFloating').textContent='マップ上の空いているマスをクリックして首都を決めてください');
+// ===== タブ =====
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id === 's-' + b.dataset.tab));
+  if (b.dataset.tab === 'map') requestAnimationFrame(resize);
 });
 
-function tryFoundAt(r,c){
-  const key=r+'_'+c;
-  if(tilesData[key] && tilesData[key].owner){
-    alert('その場所には既に国があります。空いているマスを選んでください。');
-    return;
-  }
-  const info = window.__pendingFound;
-  const newRef = db.ref('countries').push();
-  const id = newRef.key;
-  newRef.set({
-    name: info.name,
-    icon: info.icon,
-    color: info.color,
-    ownerUid: myUid,
-    capitalRow: r,
-    capitalCol: c,
-    createdAt: Date.now(),
-    lastActionAt: 0
+// ===== 建国 =====
+function renderPick() {
+  $('iconPick').innerHTML = PRESETS.map(i => `<button class="ic" data-i="${i}">${i}</button>`).join('');
+  document.querySelectorAll('#iconPick .ic').forEach(b => b.onclick = () => { $('nIcon').value = b.dataset.i; });
+}
+renderPick();
+
+$('nGo').onclick = async () => {
+  const name = $('nName').value.trim();
+  if (!name) return toast('国名を入力してください');
+  const icon = firstChar($('nIcon').value) || '🥚';
+  const cn = $('nCap').value.trim() || (name + 'の首都');
+  myId = 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  localStorage.setItem('umiNationId', myId);
+  await db.ref('nations/' + myId).set({
+    name, color: $('nColor').value, icon, capitalName: cn, capitalIcon: '🏛️',
+    tiles: 0, gold: 60, units: { land: 1, air: 0, sea: 0 }, created: Date.now()
   });
-  db.ref('tiles/'+key).set({owner:id, capital:true});
-  myCountryId = id;
-  localStorage.setItem('oceanNationsCountryId', id);
-  foundingArmed = false;
-}
+  pushLog(`🏝️ 「${name}」が海の上に建国を宣言した!`);
+  $('overlay').style.display = 'none';
+};
 
-/* ---------------- Tile click / actions ---------------- */
-function onTileClick(r,c){
-  if(foundingArmed){ tryFoundAt(r,c); return; }
-  if(!myCountryId){
-    document.getElementById('foundOverlay').style.display='flex';
-    return;
-  }
-  const remain = cooldownRemaining();
-  if(remain>0){
-    flashCooldown();
-    return;
-  }
-  const key=r+'_'+c;
-  const tile = tilesData[key];
-  const myNeighborsOwned = neighbors(r,c).some(k=>tilesData[k] && tilesData[k].owner===myCountryId);
-
-  if(mode==='expand'){
-    if(tile && tile.owner){ alert('既に誰かの領土です。'); return; }
-    if(!myNeighborsOwned){ alert('自国の領土に隣接するマスだけ拡張できます。'); return; }
-    db.ref('tiles/'+key).set({owner:myCountryId, capital:false});
-    touchAction();
-    return;
-  }
-
-  if(!tile || !tile.owner){ alert('そこは無所属の海です。攻撃対象がありません。'); return; }
-  if(tile.owner===myCountryId){ alert('自国の領土です。'); return; }
-  if(isAllied(myCountryId, tile.owner)){ alert('同盟国のため攻撃できません。'); return; }
-
-  if(mode==='land'){
-    if(!myNeighborsOwned){ alert('陸攻撃は自国の領土に隣接した敵の陸地にしかできません。'); return; }
-    resolveCapture(key, tile);
-  } else if(mode==='sea'){
-    const isCoastal = neighbors(r,c).some(k=>!tilesData[k] || !tilesData[k].owner);
-    if(!isCoastal){ alert('海攻撃は、海に面した沿岸のマスにしか行えません。'); return; }
-    resolveCapture(key, tile);
-  } else if(mode==='air'){
-    if(tile.capital){ alert('首都は空爆から保護されています。占領するには陸攻撃か海攻撃が必要です。'); return; }
-    db.ref('tiles/'+key).set(null);
-    pushLog({type:'air', attacker:myCountryId, defender:tile.owner, row:r, col:c, result:'destroyed'});
-    touchAction();
-  }
-}
-
-function resolveCapture(key, tile){
-  const defenderId = tile.owner;
-  const wasCapital = !!tile.capital;
-  db.ref('tiles/'+key).set({owner:myCountryId, capital:false});
-  pushLog({type: mode, attacker:myCountryId, defender:defenderId, row:Number(key.split('_')[0]), col:Number(key.split('_')[1]), result: wasCapital? 'capital_captured':'captured'});
-  if(wasCapital){
-    annexNation(defenderId);
-  }
-  touchAction();
-}
-
-function annexNation(defenderId){
-  const updates = {};
-  Object.entries(tilesData).forEach(([k,t])=>{
-    if(t && t.owner===defenderId){
-      updates['tiles/'+k+'/owner']=myCountryId;
-      updates['tiles/'+k+'/capital']=false;
-    }
-  });
-  updates['countries/'+defenderId]=null;
-  Object.keys(alliancesData).forEach(pk=>{
-    if(pk.includes(defenderId)) updates['alliances/'+pk]=null;
-  });
-  db.ref().update(updates);
-  pushLog({type:'annex', attacker:myCountryId, defender:defenderId, result:'nation_fallen'});
-}
-
-function touchAction(){
-  if(myCountryId) db.ref('countries/'+myCountryId+'/lastActionAt').set(Date.now());
-}
-
-function flashCooldown(){
-  const el=document.getElementById('cooldownText');
-  if(el) el.style.color = 'var(--coral)';
-  setTimeout(()=>{ if(el) el.style.color='var(--sand)'; },400);
-}
-
-/* ---------------- Mode buttons ---------------- */
-document.querySelectorAll('.mode-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    mode = btn.dataset.mode;
-    updateModeHint();
-  });
+// ===== DB購読 =====
+db.ref('tiles').on('value', s => { tiles = s.val() || {}; draw(); renderPanel(); });
+db.ref('forts').on('value', s => { forts = s.val() || {}; draw(); renderPanel(); });
+db.ref('nations').on('value', s => {
+  nations = s.val() || {};
+  $('overlay').style.display = (!myId || !nations[myId]) ? 'flex' : 'none';
+  renderAll();
 });
-function updateModeHint(){
-  const hints = {
-    expand: '自国の領土に隣接する空きマスをクリックすると領土が広がります。',
-    land: '自国の領土に隣接した敵の陸地をクリックして占領します。',
-    sea: '海に面した敵の沿岸マスをクリックして占領します（隣接不要）。',
-    air: 'マップ上のどのマスでも攻撃できますが、占領はできず無所属の海に戻します。首都は攻撃できません。'
-  };
-  document.getElementById('modeHint').textContent = hints[mode];
-}
-updateModeHint();
-
-/* ---------------- Tabs ---------------- */
-function showTab(name){
-  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
-  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+name));
-}
-document.querySelectorAll('nav.tabs button').forEach(b=>{
-  b.addEventListener('click', ()=>showTab(b.dataset.tab));
+db.ref('logs').orderByChild('t').limitToLast(40).on('value', s => {
+  logs = []; s.forEach(c => logs.push(c.val())); logs.reverse(); renderLog();
 });
+function pushLog(text){ db.ref('logs').push({ t: Date.now(), text }); }
 
-/* ---------------- Rendering ---------------- */
-function renderAll(){
-  renderGrid();
-  renderNationCard();
-  renderRanking();
-  renderAlliance();
+// ===== 収入 =====
+setInterval(() => {
+  const n = me();
+  if (n && n.tiles > 0) db.ref('nations/' + myId + '/gold').transaction(g => (g || 0) + 2 + n.tiles);
+}, 3000);
+setInterval(() => { if (sel && tiles[sel.x + '_' + sel.y] && tiles[sel.x + '_' + sel.y] !== myId) renderPanel(); }, 2000);
+
+// ===== カメラ(スワイプ移動・ピンチ拡大縮小) =====
+const cv = $('cv'), ctx = cv.getContext('2d'), mini = $('mini'), mctx = mini.getContext('2d');
+let cam = { x: 0, y: 0, z: 1 }, vw = 0, vh = 0, dpr = 1, camInit = false;
+const fitZ = () => Math.min(vw / (W * C), vh / (H * C));
+
+function clampCam() {
+  cam.z = Math.min(4, Math.max(fitZ() * 0.98, cam.z));
+  const ww = vw / cam.z, wh = vh / cam.z;
+  cam.x = ww >= W * C ? (W * C - ww) / 2 : Math.min(Math.max(cam.x, -ww * 0.2), W * C - ww * 0.8);
+  cam.y = wh >= H * C ? (H * C - wh) / 2 : Math.min(Math.max(cam.y, -wh * 0.2), H * C - wh * 0.8);
+}
+function fitAll() { cam.z = fitZ(); cam.x = (W * C - vw / cam.z) / 2; cam.y = (H * C - vh / cam.z) / 2; }
+function resize() {
+  const r = $('mapwrap').getBoundingClientRect();
+  if (r.width < 10) return;
+  dpr = window.devicePixelRatio || 1; vw = r.width; vh = r.height;
+  cv.width = vw * dpr; cv.height = vh * dpr;
+  if (!camInit) { fitAll(); camInit = true; }
+  clampCam(); draw();
+}
+window.addEventListener('resize', resize);
+function zoomAt(sx, sy, f) {
+  const wx = cam.x + sx / cam.z, wy = cam.y + sy / cam.z;
+  cam.z *= f; clampCam();
+  cam.x = wx - sx / cam.z; cam.y = wy - sy / cam.z;
+  clampCam(); draw();
+}
+function centerOn(cx, cy) { cam.x = (cx + .5) * C - vw / cam.z / 2; cam.y = (cy + .5) * C - vh / cam.z / 2; clampCam(); draw(); }
+
+$('zIn').onclick = () => zoomAt(vw / 2, vh / 2, 1.5);
+$('zOut').onclick = () => zoomAt(vw / 2, vh / 2, 1 / 1.5);
+$('zAll').onclick = () => { fitAll(); clampCam(); draw(); };
+$('zHome').onclick = () => {
+  const n = me();
+  if (!n || !n.capital) return toast('首都がありません');
+  const [x, y] = n.capital.split('_').map(Number);
+  cam.z = Math.max(cam.z, 1); centerOn(x, y);
+};
+
+const ptrs = new Map(); let dragMoved = false, downT = 0, pinchD = 0, startPos = { x: 0, y: 0 };
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+  if (ptrs.size === 1) { dragMoved = false; downT = Date.now(); startPos = { x: e.offsetX, y: e.offsetY }; }
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinchD = Math.hypot(a.x - b.x, a.y - b.y); dragMoved = true; }
+});
+cv.addEventListener('pointermove', e => {
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  const nx = e.offsetX, ny = e.offsetY;
+  if (ptrs.size === 1) {
+    if (Math.abs(nx - startPos.x) + Math.abs(ny - startPos.y) > 6) dragMoved = true;
+    if (dragMoved) { cam.x -= (nx - p.x) / cam.z; cam.y -= (ny - p.y) / cam.z; clampCam(); draw(); }
+    p.x = nx; p.y = ny;
+  } else if (ptrs.size === 2) {
+    p.x = nx; p.y = ny;
+    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinchD > 0) zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, d / pinchD);
+    pinchD = d;
+  }
+});
+function endPtr(e, tapOk) {
+  const wasTap = tapOk && !dragMoved && ptrs.size === 1 && Date.now() - downT < 600;
+  ptrs.delete(e.pointerId); pinchD = 0;
+  if (wasTap) tap(e.offsetX, e.offsetY);
+}
+cv.addEventListener('pointerup', e => endPtr(e, true));
+cv.addEventListener('pointercancel', e => endPtr(e, false));
+cv.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.offsetX, e.offsetY, e.deltaY < 0 ? 1.18 : 1 / 1.18); }, { passive: false });
+
+// ミニマップ
+function miniJump(e) { centerOn(e.offsetX / mini.clientWidth * W, e.offsetY / mini.clientHeight * H); }
+let miniDrag = false;
+mini.addEventListener('pointerdown', e => { miniDrag = true; mini.setPointerCapture(e.pointerId); miniJump(e); });
+mini.addEventListener('pointermove', e => { if (miniDrag) miniJump(e); });
+mini.addEventListener('pointerup', () => miniDrag = false);
+
+function tap(sx, sy) {
+  const x = Math.floor((cam.x + sx / cam.z) / C), y = Math.floor((cam.y + sy / cam.z) / C);
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  if (!sel || sel.x !== x || sel.y !== y) send = { land: 0, air: 0, sea: 0 };
+  sel = { x, y };
+  const n = me();
+  if (n && n.tiles <= 0 && !tiles[x + '_' + y]) { found(x, y); return; }
+  draw(); renderPanel();
 }
 
-function renderGrid(){
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      const key=r+'_'+c;
-      const el = tileEls[key];
-      const t = tilesData[key];
-      if(t && t.owner && countriesData[t.owner]){
-        const nation = countriesData[t.owner];
-        el.style.background = nation.color;
-        el.textContent = nation.icon;
-        el.style.color = '#fff';
-        el.classList.toggle('capital', !!t.capital);
-        el.title = nation.name + (t.capital? '（首都）':'');
-      } else {
-        el.style.background = '';
-        el.textContent = '';
-        el.classList.remove('capital');
-        el.title = '無所属の海';
-      }
+// ===== 描画 =====
+function draw() {
+  if (!vw) return;
+  const z = cam.z;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#08213a'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(z * dpr, 0, 0, z * dpr, -cam.x * z * dpr, -cam.y * z * dpr);
+  ctx.fillStyle = '#0b5089'; ctx.fillRect(0, 0, W * C, H * C);
+  const x0 = Math.max(0, Math.floor(cam.x / C)), x1 = Math.min(W, Math.ceil((cam.x + vw / z) / C));
+  const y0 = Math.max(0, Math.floor(cam.y / C)), y1 = Math.min(H, Math.ceil((cam.y + vh / z) / C));
+  const cs = C * z;                                   // 画面上の1マスのpx
+  if (cs >= 8) {
+    ctx.fillStyle = '#0d5a94';
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) if ((x + y) % 2) ctx.fillRect(x * C, y * C, C, C);
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+    const k = x + '_' + y, o = tiles[k];
+    if (!o || !nations[o]) continue;
+    const n = nations[o];
+    ctx.globalAlpha = .9; ctx.fillStyle = n.color;
+    ctx.fillRect(x * C + .5, y * C + .5, C - 1, C - 1);
+    ctx.globalAlpha = 1;
+    if (o === myId) {
+      if (cs >= 10) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x * C + 2, y * C + 2, C - 4, C - 4); }
+      else { ctx.fillStyle = '#fff'; ctx.fillRect(x * C + C * .33, y * C + C * .33, C * .34, C * .34); }
+    } else if (isAlly(o)) { ctx.fillStyle = '#69f0ae'; ctx.fillRect(x * C + 2, y * C + 2, C * .3, C * .3); }
+    if (forts[k]) { ctx.strokeStyle = '#111'; ctx.lineWidth = Math.max(2, C * .12); ctx.strokeRect(x * C + 3, y * C + 3, C - 6, C - 6); }
+    if (cs >= 18 && n.capital !== k) {
+      ctx.globalAlpha = .75; ctx.font = (C * .6) + 'px sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText(n.icon || '🏳️', x * C + C / 2, y * C + C / 2 + 1); ctx.globalAlpha = 1;
     }
   }
+  // 首都(最前面)
+  for (const id in nations) {
+    const n = nations[id];
+    if (!n.capital || tiles[n.capital] !== id) continue;
+    const [cx, cy] = n.capital.split('_').map(Number);
+    if (cx < x0 - 3 || cx > x1 + 3 || cy < y0 - 3 || cy > y1 + 3) continue;
+    const size = Math.max(C * .9, 18 / z), px = cx * C + C / 2, py = cy * C + C / 2;
+    ctx.fillStyle = '#000a'; ctx.beginPath(); ctx.arc(px, py, size * .6, 0, 7); ctx.fill();
+    ctx.strokeStyle = n.color; ctx.lineWidth = 3 / z; ctx.stroke();
+    ctx.font = (size * .8) + 'px sans-serif'; ctx.fillStyle = '#fff';
+    ctx.fillText(capIcon(n), px, py + 1 / z);
+    if (cs >= 8 || z < 0.58) {
+      const label = z < 0.58 ? (n.icon || '') + n.name : capName(n);
+      ctx.font = `bold ${11 / z}px sans-serif`; ctx.lineWidth = 3 / z; ctx.strokeStyle = '#000'; ctx.lineJoin = 'round';
+      ctx.strokeText(label, px, py + size * .6 + 8 / z); ctx.fillStyle = '#fff'; ctx.fillText(label, px, py + size * .6 + 8 / z);
+    }
+  }
+  if (sel) { ctx.strokeStyle = '#ffd54a'; ctx.lineWidth = 3 / z; ctx.strokeRect(sel.x * C, sel.y * C, C, C); }
+  drawMini();
+}
+function drawMini() {
+  const s = mini.width / W;
+  mctx.clearRect(0, 0, mini.width, mini.height);
+  mctx.fillStyle = '#0b4a7a'; mctx.fillRect(0, 0, mini.width, mini.height);
+  for (const k in tiles) {
+    const n = nations[tiles[k]]; if (!n) continue;
+    const [x, y] = k.split('_').map(Number);
+    mctx.fillStyle = tiles[k] === myId ? '#fff' : n.color;
+    mctx.fillRect(x * s, y * s, Math.max(1.5, s), Math.max(1.5, s));
+  }
+  mctx.strokeStyle = '#ffd54a'; mctx.lineWidth = 1.5;
+  mctx.strokeRect(cam.x / C * s, cam.y / C * s, vw / cam.z / C * s, vh / cam.z / C * s);
 }
 
-function renderNationCard(){
-  const card = document.getElementById('nationCard');
-  const actionCard = document.getElementById('actionCard');
-  const overlay = document.getElementById('foundOverlay');
+// ===== 位置ヘルパー =====
+function minDist(x, y) {
+  let m = 999;
+  for (const k in tiles) if (tiles[k] === myId) { const [a, b] = k.split('_').map(Number); m = Math.min(m, Math.abs(a - x) + Math.abs(b - y)); }
+  return m;
+}
+function countNb(x, y, owner) {
+  let c = 0; for (const [dx, dy] of DIRS) if (tiles[(x + dx) + '_' + (y + dy)] === owner) c++; return c;
+}
+function terrain(k, did) {
+  const [x, y] = k.split('_').map(Number), d = nations[did];
+  return { flank: countNb(x, y, myId), fn: countNb(x, y, did), fort: !!forts[k], isCap: !!d && d.capital === k };
+}
 
-  if(myCountryId && countriesData[myCountryId]){
-    overlay.style.display='none';
-    foundingArmed=false;
-    const n = countriesData[myCountryId];
-    const counts = tileCounts();
-    const myCount = counts[myCountryId]||0;
-    card.innerHTML = `
-      <h3>あなたの国</h3>
-      <div class="nation-badge">
-        <div class="nation-swatch" style="background:${n.color}">${n.icon}</div>
-        <div class="nation-meta">
-          <div class="name">${escapeHtml(n.name)}</div>
-          <div class="stat">領土 ${myCount} マス ・ 首都 (${n.capitalRow}, ${n.capitalCol})</div>
-        </div>
-      </div>
-      <button class="danger" id="abandonBtn">国を放棄してやり直す</button>
-    `;
-    document.getElementById('abandonBtn').addEventListener('click', abandonNation);
-    actionCard.style.display='block';
-    updateCooldownDisplay();
+// ===== 建国(首都) =====
+async function found(x, y) {
+  const tr = await db.ref('tiles/' + x + '_' + y).transaction(c => c === null ? myId : undefined);
+  if (!tr.committed) return toast('そのマスは他国の領土です');
+  await db.ref('nations/' + myId + '/tiles').transaction(v => (v || 0) + 1);
+  await db.ref('nations/' + myId + '/capital').set(x + '_' + y);
+  pushLog(`👑 ${me().name} が (${x},${y}) に首都「${capName(me())}」を築いた`);
+  toast('首都を建設しました!');
+}
+
+// ===== 領土拡張・要塞・偵察・購入 =====
+async function expand() {
+  if (!sel) return;
+  const { x, y } = sel, k = x + '_' + y, cost = expandCost();
+  if (tiles[k]) return toast('すでに誰かの領土です');
+  if (minDist(x, y) !== 1) return toast('自国に隣接するマスだけ拡張できます');
+  const r = await db.ref('nations/' + myId).transaction(n => { if (!n || (n.gold || 0) < cost) return; n.gold -= cost; return n; });
+  if (!r.committed) return toast('資金が足りません');
+  const tr = await db.ref('tiles/' + k).transaction(c => c === null ? myId : undefined);
+  if (tr.committed) { await db.ref('nations/' + myId + '/tiles').transaction(v => (v || 0) + 1); toast('領土を拡張しました'); }
+  else { db.ref('nations/' + myId + '/gold').transaction(g => (g || 0) + cost); toast('先に他国に取られました'); }
+}
+async function fortify() {
+  if (!sel) return;
+  const k = sel.x + '_' + sel.y;
+  if (tiles[k] !== myId || forts[k]) return;
+  const r = await db.ref('nations/' + myId).transaction(n => { if (!n || (n.gold || 0) < FORT_COST) return; n.gold -= FORT_COST; return n; });
+  if (!r.committed) return toast('資金が足りません');
+  await db.ref('forts/' + k).set(true); toast('🧱 要塞化しました(防御+50%)');
+}
+async function scout(id) {
+  const r = await db.ref('nations/' + myId).transaction(n => { if (!n || (n.gold || 0) < SCOUT_COST) return; n.gold -= SCOUT_COST; return n; });
+  if (!r.committed) return toast('資金が足りません');
+  scoutUntil[id] = Date.now() + SCOUT_MS;
+  toast(`🔍 ${nations[id].name} の戦力を偵察(90秒)`); renderPanel(); renderRank();
+}
+async function buy(type) {
+  const cost = COST[type];
+  const r = await db.ref('nations/' + myId).transaction(n => {
+    if (!n || (n.gold || 0) < cost) return;
+    n.gold -= cost; n.units = n.units || { land: 0, air: 0, sea: 0 };
+    n.units[type] = (n.units[type] || 0) + 1; return n;
+  });
+  toast(r.committed ? `${NAME[type]}を1部隊増強` : '資金が足りません');
+}
+
+// ===== 戦争(運なし・読み合い) =====
+
+function forecast(snd, k, did) {
+  const d = nations[did], tr = terrain(k, did);
+  const def = { land: 0, sea: 0, air: 0 };
+  for (const T of TYPES) def[T] = (d.units && d.units[T]) || 0;
+  for (const aid of Object.keys(d.allies || {})) {           // 同盟国は30%の力で援護
+    const an = nations[aid];
+    if (an && (an.tiles || 0) > 0) for (const T of TYPES) def[T] += ((an.units && an.units[T]) || 0) * 0.3;
+  }
+  let atk = 0, base = 0;
+  for (const T of TYPES) { atk += (snd[T] || 0) * POW[T]; base += def[T] * POW[T]; }
+  atk *= 1 + 0.1 * tr.flank;
+  const dfn = (base + 1) * (1 + 0.1 * tr.fn) * (tr.fort ? 1.5 : 1) * (tr.isCap ? 1.5 : 1);
+  const win = atk > dfn, hi = Math.max(atk, dfn), lo = Math.min(atk, dfn), r = hi > 0 ? lo / hi : 0;
+  const wl = 0.6 * r, ll = Math.min(0.95, 0.5 + 0.4 * (1 - r));
+  return { atk, dfn, win, fa: win ? wl : ll, fd: win ? ll : wl, tr, def, base };
+}
+
+async function attack() {
+  if (!sel) return;
+  const k = sel.x + '_' + sel.y, did = tiles[k], d = nations[did], a = me();
+  if (!did || did === myId || !d) return;
+  if (isAlly(did)) return toast('同盟国は攻撃できません(先に同盟を解消)');
+  if (Date.now() - lastAtk < COOLDOWN) return toast('部隊が再編中です(数秒待って)');
+  const dist = minDist(sel.x, sel.y), u = a.units || {};
+  let total = 0;
+  for (const T of TYPES) {
+    const s = send[T] || 0; if (s <= 0) continue;
+    if (dist > RANGE[T]) return toast(`${NAME[T]}は射程外です`);
+    if (s > (u[T] || 0)) return toast('兵力が足りません');
+    total += s;
+  }
+  if (total < 1) return toast('出撃させる部隊を選んでください');
+  lastAtk = Date.now();
+
+  const f = forecast(send, k, did), sent = { ...send };
+  send = { land: 0, air: 0, sea: 0 };
+  const isCap = f.tr.isCap;
+
+  await db.ref('nations/' + myId).transaction(n => {
+    if (!n) return; n.units = n.units || {};
+    for (const T of TYPES) n.units[T] = Math.max(0, (n.units[T] || 0) - Math.ceil((sent[T] || 0) * f.fa));
+    return n;
+  });
+  await db.ref('nations/' + did).transaction(n => {
+    if (!n) return; n.units = n.units || {};
+    for (const T of TYPES) n.units[T] = Math.floor((n.units[T] || 0) * (1 - f.fd));
+    if (f.win && !isCap) n.tiles = Math.max(0, (n.tiles || 0) - 1);
+    return n;
+  });
+
+  const desc = `(陸${sent.land} 海${sent.sea} 空${sent.air})`;
+  if (f.win && isCap) {
+    const cnt = await annex(did, d);
+    pushLog(`👑 ${a.name} が ${d.name} の首都「${capName(d)}」を陥落!${cnt}マスの全領土を乗っ取った!`);
+    pushLog(`💀 ${d.name} は滅亡した…`);
+    toast(`首都陥落!${d.name}を乗っ取りました(+${cnt}マス)`);
+  } else if (f.win) {
+    const up = {}; up['tiles/' + k] = myId; up['forts/' + k] = null;
+    await db.ref().update(up);
+    await db.ref('nations/' + myId + '/tiles').transaction(v => (v || 0) + 1);
+    pushLog(`⚔️ ${a.name} が ${d.name} の (${sel.x},${sel.y}) を占領! ${desc}`);
+    toast('勝利!領土を奪いました');
   } else {
-    card.innerHTML = `
-      <h3>まだ国がありません</h3>
-      <p class="hint">「新しい国を築く」から名前・アイコン・色を決めて建国しましょう。</p>
-      <button class="primary" id="openFoundBtn" style="margin-top:8px;">新しい国を築く</button>
-    `;
-    document.getElementById('openFoundBtn').addEventListener('click', ()=>{
-      document.getElementById('foundOverlay').style.display='flex';
-    });
-    actionCard.style.display='none';
+    pushLog(`🛡️ ${d.name} が ${a.name} の攻撃を撃退した ${desc}`);
+    toast('敗北…防衛されました');
   }
+  renderPanel();
 }
 
-setInterval(updateCooldownDisplay, 300);
-function updateCooldownDisplay(){
-  const el = document.getElementById('cooldownText');
-  if(!el || !myCountryId) return;
-  const remain = cooldownRemaining();
-  el.textContent = remain>0 ? `次の行動まで ${(remain/1000).toFixed(1)} 秒` : '行動可能です';
+async function annex(did, d) {
+  const up = {}; let cnt = 0;
+  for (const key in tiles) if (tiles[key] === did) { up['tiles/' + key] = myId; up['forts/' + key] = null; cnt++; }
+  up['nations/' + did + '/tiles'] = 0;
+  up['nations/' + did + '/capital'] = null;
+  up['nations/' + did + '/allies'] = null;
+  up['nations/' + did + '/req'] = null;
+  up['nations/' + did + '/units'] = { land: 0, air: 0, sea: 0 };
+  for (const id in nations) if (id !== did && nations[id].allies && nations[id].allies[did]) up['nations/' + id + '/allies/' + did] = null;
+  await db.ref().update(up);
+  const loot = Math.floor((d.gold || 0) / 2);
+  await db.ref('nations/' + did + '/gold').transaction(g => Math.floor((g || 0) / 2));
+  await db.ref('nations/' + myId).transaction(n => { if (!n) return; n.tiles = (n.tiles || 0) + cnt; n.gold = (n.gold || 0) + loot; return n; });
+  return cnt;
 }
 
-function abandonNation(){
-  if(!confirm('本当に国を放棄しますか？領土はすべて無所属の海に戻ります。')) return;
-  const updates={};
-  Object.entries(tilesData).forEach(([k,t])=>{
-    if(t && t.owner===myCountryId) updates['tiles/'+k]=null;
-  });
-  updates['countries/'+myCountryId]=null;
-  Object.keys(alliancesData).forEach(pk=>{ if(pk.includes(myCountryId)) updates['alliances/'+pk]=null; });
-  db.ref().update(updates);
-  localStorage.removeItem('oceanNationsCountryId');
-  myCountryId=null;
+function adj(T, dlt) {
+  const u = (me().units || {})[T] || 0;
+  send[T] = Math.max(0, Math.min(u, (send[T] || 0) + dlt)); renderPanel();
+}
+function allIn() {
+  const d = minDist(sel.x, sel.y), u = me().units || {};
+  for (const T of TYPES) send[T] = d <= RANGE[T] ? (u[T] || 0) : 0;
+  renderPanel();
 }
 
-function renderRanking(){
-  const counts = tileCounts();
-  const rows = Object.entries(countriesData).map(([id,n])=>({
-    id, n, count: counts[id]||0,
-    allyCount: Object.keys(alliancesData).filter(pk=>pk.includes(id)).length
-  })).sort((a,b)=>b.count-a.count);
-
-  const tbody = document.getElementById('rankingBody');
-  if(rows.length===0){
-    tbody.innerHTML = `<tr><td colspan="5" class="empty">まだ国がありません。最初の建国者になりましょう。</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = rows.map((row,i)=>`
-    <tr class="${row.id===myCountryId?'me':''}">
-      <td class="rank-num">${i+1}</td>
-      <td><span class="chip"><span class="dot" style="background:${row.n.color}">${row.n.icon}</span>${escapeHtml(row.n.name)}</span></td>
-      <td>${row.count}</td>
-      <td>(${row.n.capitalRow}, ${row.n.capitalCol})</td>
-      <td>${row.allyCount}</td>
-    </tr>
-  `).join('');
+// ===== 同盟 =====
+async function reqAlly(id) { await db.ref(`nations/${id}/req/${myId}`).set(true); toast('同盟を申請しました'); }
+async function acceptAlly(id) {
+  const u = {};
+  u[`nations/${myId}/allies/${id}`] = true; u[`nations/${id}/allies/${myId}`] = true;
+  u[`nations/${myId}/req/${id}`] = null; u[`nations/${id}/req/${myId}`] = null;
+  await db.ref().update(u);
+  pushLog(`🤝 ${me().name} と ${nations[id].name} が同盟を結んだ!`);
+}
+async function declineAlly(id) { await db.ref(`nations/${myId}/req/${id}`).remove(); }
+async function breakAlly(id) {
+  const u = {}; u[`nations/${myId}/allies/${id}`] = null; u[`nations/${id}/allies/${myId}`] = null;
+  await db.ref().update(u);
+  pushLog(`💔 ${me().name} が ${nations[id].name} との同盟を破棄した`);
 }
 
-function renderAlliance(){
-  const incoming = document.getElementById('incomingRequests');
-  const current = document.getElementById('currentAllies');
-  const others = document.getElementById('otherNations');
-  if(!myCountryId){
-    incoming.innerHTML = current.innerHTML = others.innerHTML = `<div class="empty">同盟機能を使うには、まず建国してください。</div>`;
-    return;
-  }
-
-  const inReqs = Object.entries(requestsData).filter(([k,r])=>r && r.to===myCountryId);
-  incoming.innerHTML = inReqs.length ? inReqs.map(([k,r])=>{
-    const n = countriesData[r.from];
-    if(!n) return '';
-    return `<div class="alliance-row">
-      <div class="who"><span class="chip"><span class="dot" style="background:${n.color}">${n.icon}</span>${escapeHtml(n.name)}</span> から申請</div>
-      <div style="display:flex;gap:6px;">
-        <button class="primary" onclick="acceptAlliance('${k}','${r.from}')" style="padding:6px 10px;font-size:12px;">承認</button>
-        <button class="ghost" onclick="rejectAlliance('${k}')" style="padding:6px 10px;">拒否</button>
-      </div>
-    </div>`;
-  }).join('') : `<div class="empty">受信中の申請はありません。</div>`;
-
-  const allyIds = Object.keys(alliancesData).filter(pk=>pk.includes(myCountryId))
-    .map(pk=>pk.split('__').find(x=>x!==myCountryId));
-  current.innerHTML = allyIds.length ? allyIds.map(id=>{
-    const n = countriesData[id];
-    if(!n) return '';
-    return `<div class="alliance-row">
-      <div class="who"><span class="chip"><span class="dot" style="background:${n.color}">${n.icon}</span>${escapeHtml(n.name)}</span></div>
-      <button class="danger" onclick="breakAlliance('${id}')">同盟解消</button>
-    </div>`;
-  }).join('') : `<div class="empty">同盟国はまだありません。</div>`;
-
-  const pendingOut = new Set(Object.values(requestsData).filter(r=>r&&r.from===myCountryId).map(r=>r.to));
-  const otherIds = Object.keys(countriesData).filter(id=>id!==myCountryId && !isAllied(myCountryId,id));
-  others.innerHTML = otherIds.length ? otherIds.map(id=>{
-    const n = countriesData[id];
-    const pending = pendingOut.has(id);
-    return `<div class="alliance-row">
-      <div class="who"><span class="chip"><span class="dot" style="background:${n.color}">${n.icon}</span>${escapeHtml(n.name)}</span></div>
-      ${pending
-        ? `<span class="hint" style="margin:0;">申請中…</span>`
-        : `<button class="ghost" onclick="requestAlliance('${id}')">同盟を申請</button>`}
-    </div>`;
-  }).join('') : `<div class="empty">他に国がありません。</div>`;
+// ===== 国の設定 =====
+let settingsBuilt = false;
+function renderSettings() {
+  const n = me(); if (settingsBuilt || !n) return;
+  settingsBuilt = true;
+  $('setBox').innerHTML = `
+    <h3>🏳️ 国の設定</h3>
+    <label>国名</label><input type="text" id="sName" maxlength="12" value="${esc(n.name)}">
+    <div class="row2">
+      <div><label>国のアイコン(好きな1文字)</label><input type="text" class="one" id="sIcon" value="${esc(n.icon || '🏳️')}"></div>
+      <div><label>首都のアイコン(好きな1文字)</label><input type="text" class="one" id="sCapIcon" value="${esc(capIcon(n))}"></div>
+    </div>
+    <label>首都の名前</label><input type="text" id="sCap" maxlength="12" value="${esc(n.capitalName || '')}" placeholder="首都の名前">
+    <div class="hint" style="margin-top:0">よく使うアイコン(タップで国のアイコンに入力)</div>
+    <div class="icons" id="setPick">${PRESETS.map(i => `<button class="ic" data-i="${i}">${i}</button>`).join('')}</div>
+    <button class="btn" onclick="saveSettings()">💾 保存</button>`;
+  document.querySelectorAll('#setPick .ic').forEach(b => b.onclick = () => { $('sIcon').value = b.dataset.i; });
+}
+async function saveSettings() {
+  const u = {};
+  const name = $('sName').value.trim().slice(0, 12), cn = $('sCap').value.trim().slice(0, 12);
+  const ic = firstChar($('sIcon').value), ci = firstChar($('sCapIcon').value);
+  if (name) u.name = name; if (cn) u.capitalName = cn; if (ic) u.icon = ic; if (ci) u.capitalIcon = ci;
+  await db.ref('nations/' + myId).update(u); toast('保存しました');
 }
 
-function requestAlliance(toId){
-  const key = myCountryId+'__'+toId;
-  db.ref('allianceRequests/'+key).set({from:myCountryId, to:toId, time:Date.now()});
-}
-function acceptAlliance(reqKey, fromId){
-  db.ref('alliances/'+pairKey(myCountryId,fromId)).set(true);
-  db.ref('allianceRequests/'+reqKey).remove();
-}
-function rejectAlliance(reqKey){
-  db.ref('allianceRequests/'+reqKey).remove();
-}
-function breakAlliance(otherId){
-  db.ref('alliances/'+pairKey(myCountryId,otherId)).remove();
-}
+// ===== UI =====
+function renderPanel() {
+  const p = $('panel'), n = me();
+  if (!n) { p.textContent = '建国してください'; return; }
+  if (n.tiles <= 0) { p.innerHTML = '<h3>👑 首都を決めよう</h3>海の空いているマスをタップすると首都になります(無料)。'; return; }
+  if (!sel) { p.textContent = 'マスをタップして選択してください。'; return; }
+  const k = sel.x + '_' + sel.y, o = tiles[k], on = nations[o];
+  let h = `<h3>📍 (${sel.x}, ${sel.y})</h3>`;
 
-function renderLog(logs){
-  const list = document.getElementById('logList');
-  const entries = Object.values(logs).sort((a,b)=>b.time-a.time);
-  if(entries.length===0){
-    list.innerHTML = `<div class="empty">まだ戦闘記録はありません。</div>`;
-    return;
-  }
-  const typeLabel = {land:'陸攻撃', sea:'海攻撃', air:'空爆', annex:'首都陥落'};
-  list.innerHTML = entries.map(e=>{
-    const att = countriesData[e.attacker];
-    const def = countriesData[e.defender] || {name:'(滅亡済み)', icon:'', color:'#888'};
-    const attName = att ? att.icon+' '+escapeHtml(att.name) : '(不明)';
-    const defName = def ? def.icon+' '+escapeHtml(def.name) : '(不明)';
-    let msg;
-    if(e.type==='annex'){
-      msg = `<b>${attName}</b> が <b class="def">${defName}</b> の首都を陥落させ、全領土を併合した！`;
-    } else if(e.result==='capital_captured'){
-      msg = `<b>${attName}</b> が ${typeLabel[e.type]} で <b class="def">${defName}</b> の首都マス (${e.row},${e.col}) を奪取！`;
-    } else if(e.type==='air'){
-      msg = `<b>${attName}</b> が ${defName} のマス (${e.row},${e.col}) を空爆で破壊した。`;
+  if (!o) {
+    const adj1 = minDist(sel.x, sel.y) === 1;
+    h += `どこの国でもない海です。<div class="btns"><button class="btn" ${adj1 ? '' : 'disabled'} onclick="expand()">🌊 領土にする(💰${expandCost()})</button></div>`;
+    if (!adj1) h += '<div class="hint">自国に隣接するマスだけ拡張できます。</div>';
+  } else if (o === myId) {
+    h += n.capital === k ? `👑 あなたの首都「${esc(capName(n))}」です。ここを奪われると国が乗っ取られます!` : 'あなたの領土です。';
+    h += `<div class="hint">周囲の自国マス ${countNb(sel.x, sel.y, myId)} → 防御+${countNb(sel.x, sel.y, myId) * 10}%(領土を固めると守りが強くなります)</div>`;
+    h += forts[k] ? '<div>🧱 要塞化済み(防御+50%)</div>'
+      : `<div class="btns"><button class="btn gray" onclick="fortify()">🧱 要塞化(💰${FORT_COST})</button></div>`;
+  } else {
+    const d = minDist(sel.x, sel.y), u = n.units || {}, ally = isAlly(o), known = isKnown(o), tr = terrain(k, o);
+    for (const T of TYPES) send[T] = d <= RANGE[T] ? Math.min(send[T] || 0, u[T] || 0) : 0;
+    const total = TYPES.reduce((s, T) => s + send[T], 0);
+    h += `${esc(on?.icon || '')} <b style="color:${on?.color || '#fff'}">${on ? esc(on.name) : '?'}</b> の領土`
+      + (tr.isCap ? ` 👑<b>首都「${esc(capName(on))}」</b>` : '') + (ally ? ' 🤝同盟国' : '')
+      + `<div class="hint">領土${on?.tiles || 0}マス / 自国から距離${d}</div>`;
+    if (ally) {
+      h += '<div class="hint">同盟国は攻撃できません。</div>';
     } else {
-      msg = `<b>${attName}</b> が ${defName} のマス (${e.row},${e.col}) を占領した。`;
+      h += TYPES.map(T => `<div class="unit"><div>${ICON[T]} ${NAME[T]}<div class="hint" style="margin:0">保有${u[T] || 0}・強さ${POW[T]}・射程${RANGE[T]}${d <= RANGE[T] ? '' : '(圏外)'}</div></div>
+        <div class="stepper"><button class="btn" ${d <= RANGE[T] ? '' : 'disabled'} onclick="adj('${T}',-1)">−</button><b>${send[T]}</b><button class="btn" ${d <= RANGE[T] ? '' : 'disabled'} onclick="adj('${T}',1)">＋</button></div></div>`).join('');
+      h += `<div class="fc"><b>📊 戦況の見通し</b><br>📍 地形:自軍の挟撃 <b>+${tr.flank * 10}%</b> / 敵の守り <b>+${tr.fn * 10}%</b>${tr.fort ? ' / 🧱要塞+50%' : ''}${tr.isCap ? ' / 👑首都+50%' : ''}`;
+      if (known) {
+        const f = forecast(send, k, o), dd = f.def;
+        h += `<br>👁 敵の戦力:🪖${dd.land.toFixed(1)} 🚢${dd.sea.toFixed(1)} ✈️${dd.air.toFixed(1)}(強さ合計 ${f.base.toFixed(1)})`;
+        if (total > 0) h += `<br>⚔️ あなたの強さ <b>${f.atk.toFixed(1)}</b> ／ 🛡️ 敵の強さ <b>${f.dfn.toFixed(1)}</b><br>${f.win ? '<span class="win">✅ 勝てる!</span>' : '<span class="lose">❌ 負ける…(部隊を増やす)</span>'}<br>💥 失う兵:自軍${Math.round(f.fa * 100)}% / 敵${Math.round(f.fd * 100)}%`;
+        else h += '<br>👆 出撃させる部隊を ＋ で選ぶと、勝てるか判定します';
+      } else {
+        h += '<br>🔒 敵の戦力が見えません → <b>🔍偵察</b>すると「勝てるか」が判定できます(💰' + SCOUT_COST + ')';
+      }
+      h += '</div>';
+      h += `<div class="btns"><button class="btn gray" onclick="scout('${o}')" ${known ? 'disabled' : ''}>🔍 偵察 💰${SCOUT_COST}</button><button class="btn gray" onclick="allIn()">全投入</button><button class="btn red" ${total > 0 ? '' : 'disabled'} onclick="attack()">⚔️ 攻撃!</button></div>`;
     }
-    return `<div class="log-row ${e.type==='annex'?'annex':''}">${msg}</div>`;
-  }).join('');
+  }
+  p.innerHTML = h;
 }
 
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function renderStats() {
+  const n = me();
+  $('stats').innerHTML = n
+    ? `<span>${esc(n.icon || '')} ${esc(n.name)}</span><span>領土 <b>${n.tiles || 0}</b></span><span>💰 <b>${n.gold || 0}</b></span><span>🪖${n.units?.land || 0} 🚢${n.units?.sea || 0} ✈️${n.units?.air || 0}</span>`
+    : '';
+  const b = $('banner');
+  if (n && n.tiles <= 0) { b.style.display = 'block'; b.textContent = '👑 マップの空いている海をタップして首都を建設しよう!'; }
+  else b.style.display = 'none';
 }
 
-/* initial state: if no country yet, show founding overlay */
-if(!myCountryId){
-  setTimeout(()=>{ if(!myCountryId) document.getElementById('foundOverlay').style.display='flex'; }, 400);
+function renderRank() {
+  const list = Object.entries(nations).filter(([, n]) => (n.tiles || 0) > 0).sort((a, b) => (b[1].tiles || 0) - (a[1].tiles || 0));
+  const max = list.length ? list[0][1].tiles : 1;
+  $('rankList').innerHTML = list.length ? list.map(([id, n], i) => `
+    <div class="rank ${id === myId ? 'me' : ''}">
+      <div class="no">${['🥇', '🥈', '🥉'][i] || (i + 1)}</div>
+      <div class="dot" style="background:${n.color}"></div>
+      <div style="font-size:18px">${esc(n.icon || '🏳️')}</div>
+      <div class="nm">${esc(n.name)}${id === myId ? '(あなた)' : ''}${isAlly(id) ? ' 🤝' : ''}
+        <small>首都:${esc(capIcon(n))}${esc(capName(n))} / ${isKnown(id) ? `🪖${n.units?.land || 0} 🚢${n.units?.sea || 0} ✈️${n.units?.air || 0}` : '🔒戦力不明'}</small>
+        <div class="bar"><i style="width:${(n.tiles / max) * 100}%;background:${n.color}"></i></div></div>
+      <div class="tl">${n.tiles}マス</div>
+    </div>`).join('') : '<div class="hint">まだ国がありません。</div>';
 }
+
+function renderArmy() {
+  const n = me(); if (!n) return;
+  $('armyList').innerHTML = TYPES.map(t => `
+    <div class="unit"><div>${ICON[t]} <b>${NAME[t]}</b> × ${n.units?.[t] || 0}
+      <div class="hint" style="margin:0">強さ${POW[t]}・射程${RANGE[t]}マス・${DESC[t]}</div></div>
+      <button class="btn ${t}" onclick="buy('${t}')">増強 💰${COST[t]}</button></div>`).join('');
+}
+
+function renderAlly() {
+  const n = me(); if (!n) return;
+  const others = Object.entries(nations).filter(([id, x]) => id !== myId && (x.tiles || 0) > 0);
+  $('allyList').innerHTML = others.length ? others.map(([id, x]) => {
+    const allied = n.allies && n.allies[id], theyReq = n.req && n.req[id], iReq = x.req && x.req[myId];
+    const btn = allied ? `<button class="btn red" onclick="breakAlly('${id}')">解消</button>`
+      : theyReq ? `<button class="btn" onclick="acceptAlly('${id}')">承諾</button><button class="btn red" onclick="declineAlly('${id}')">拒否</button>`
+      : iReq ? '<span class="hint">申請中…</span>' : `<button class="btn" onclick="reqAlly('${id}')">同盟申請</button>`;
+    return `<div class="unit"><div>${esc(x.icon || '🏳️')} <b style="color:${x.color}">${esc(x.name)}</b>${allied ? ' 🤝' : ''}${theyReq ? ' 📩申請あり' : ''}<div class="hint" style="margin:0">${x.tiles}マス</div></div><div class="btns" style="margin:0">${btn}</div></div>`;
+  }).join('') : '<div class="hint">同盟できる国がまだありません。</div>';
+}
+
+function renderLog() {
+  $('logList').innerHTML = logs.length
+    ? logs.map(l => `<div class="log"><small>${new Date(l.t).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</small>${esc(l.text)}</div>`).join('')
+    : '<div class="hint">まだ出来事がありません。</div>';
+}
+
+function renderAll() { renderStats(); renderRank(); renderArmy(); renderSettings(); renderAlly(); renderPanel(); draw(); }
+Object.assign(window, { expand, fortify, scout, buy, attack, adj, allIn, reqAlly, acceptAlly, declineAlly, breakAlly, saveSettings });
+
+resize();
 </script>
 </body>
 </html>
