@@ -14,7 +14,7 @@ header{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:2p
 #stats{font-size:12px;color:var(--sub);display:flex;gap:10px;flex-wrap:wrap}
 #stats b{color:var(--accent)}
 nav{display:flex}
-nav button{flex:1;padding:11px 4px;background:none;border:0;border-bottom:3px solid transparent;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer}
+nav button{flex:1;padding:11px 2px;background:none;border:0;border-bottom:3px solid transparent;color:var(--sub);font-size:12.5px;font-weight:600;cursor:pointer}
 nav button.on{color:var(--text);border-bottom-color:var(--accent);background:#12365a}
 main{max-width:860px;margin:0 auto;padding:10px}
 section{display:none}section.on{display:block}
@@ -42,6 +42,9 @@ canvas{width:100%;display:block;border:2px solid var(--line);border-radius:10px;
 #overlay .box{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:20px;max-width:380px;width:100%}
 #overlay input[type=text]{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:#06172b;color:var(--text);font-size:16px;margin:6px 0 10px}
 #overlay input[type=color]{width:60px;height:38px;border:0;background:none}
+.icons{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.ic{font-size:22px;width:42px;height:42px;border-radius:10px;border:2px solid var(--line);background:#06172b;cursor:pointer}
+.ic.on{border-color:var(--accent);background:#173f66}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#000d;padding:9px 16px;border-radius:20px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:60;max-width:90%}
 #toast.show{opacity:1}
 .hint{color:var(--sub);font-size:12px;margin-top:6px;line-height:1.6}
@@ -58,6 +61,7 @@ canvas{width:100%;display:block;border:2px solid var(--line);border-radius:10px;
     <button data-tab="map" class="on">🗺️ マップ</button>
     <button data-tab="rank">🏆 ランキング</button>
     <button data-tab="army">⚔️ 軍隊</button>
+    <button data-tab="ally">🤝 同盟</button>
     <button data-tab="log">📜 戦況</button>
   </nav>
 </header>
@@ -83,9 +87,13 @@ canvas{width:100%;display:block;border:2px solid var(--line);border-radius:10px;
         ・陸軍:隣接するマスのみ攻撃可能<br>
         ・海軍:自国から3マス以内を攻撃可能<br>
         ・空軍:自国から6マス以内を攻撃可能<br>
-        攻撃側は選んだ兵種の全兵力を投入。防衛側は全兵種で守ります。
+        攻撃側は選んだ兵種の全兵力を投入。防衛側は全兵種で守ります。<br>👑 首都は防御1.5倍。<b>首都を落とされると全領土が敵に乗っ取られます。</b><br>🤝 同盟国の軍隊は防衛を30%援護します。
       </div>
     </div>
+  </section>
+
+  <section id="s-ally">
+    <div id="allyBox"></div>
   </section>
 
   <section id="s-log">
@@ -101,6 +109,8 @@ canvas{width:100%;display:block;border:2px solid var(--line);border-radius:10px;
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
       <span>国の色</span><input type="color" id="nColor" value="#ff7043">
     </div>
+    <div style="font-size:13px;color:var(--sub)">国のアイコン(首都に表示されます)</div>
+    <div class="icons" id="iconPick"></div>
     <button class="btn" id="nGo" style="width:100%;font-size:15px;padding:12px">建国する</button>
   </div>
 </div>
@@ -140,6 +150,13 @@ const ICON = { land: '🪖', air: '✈️', sea: '🚢' };
 const RANGE = { land: 1, sea: 3, air: 6 };
 const BEATS = { air: 'land', land: 'sea', sea: 'air' };   // 左が右に有利
 const COOLDOWN = 4000;
+const ICONS = ['🥚','🐉','🦅','🦁','🐺','🐻','🦈','🐙','🦊','🐢','🐘','🌸','⭐','🔥','⚓','👑'];
+let pickIcon = ICONS[0];
+function renderPick() {
+  $('iconPick').innerHTML = ICONS.map(i => `<button class="ic ${i === pickIcon ? 'on' : ''}" data-i="${i}">${i}</button>`).join('');
+  document.querySelectorAll('#iconPick .ic').forEach(b => b.onclick = () => { pickIcon = b.dataset.i; renderPick(); });
+}
+renderPick();
 
 let myId = localStorage.getItem('umiNationId');
 let nations = {}, tiles = {}, logs = [];
@@ -162,7 +179,7 @@ $('nGo').onclick = async () => {
   myId = 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   localStorage.setItem('umiNationId', myId);
   await db.ref('nations/' + myId).set({
-    name, color: $('nColor').value, tiles: 0, gold: 60,
+    name, color: $('nColor').value, icon: pickIcon, tiles: 0, gold: 60,
     units: { land: 1, air: 0, sea: 0 }, created: Date.now()
   });
   pushLog(`🏝️ 「${name}」が海の上に建国を宣言した!`);
@@ -206,6 +223,16 @@ function draw() {
       if (o === myId) {
         ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
         ctx.strokeRect(x * C + 2, y * C + 2, C - 4, C - 4);
+      } else if (isAlly(o)) {
+        ctx.fillStyle = '#69f0ae';
+        ctx.fillRect(x * C + 3, y * C + 3, 5, 5);
+      }
+      if (nations[o].capital === x + '_' + y) {
+        ctx.strokeStyle = '#ffd54a'; ctx.lineWidth = 3;
+        ctx.strokeRect(x * C + 1.5, y * C + 1.5, C - 3, C - 3);
+        ctx.font = (C - 8) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(nations[o].icon || '🏳️', x * C + C / 2, y * C + C / 2 + 1);
       }
     }
   }
@@ -243,6 +270,7 @@ async function found(x, y) {
   const tr = await db.ref('tiles/' + x + '_' + y).transaction(c => c === null ? myId : undefined);
   if (!tr.committed) return toast('そのマスは他国の領土です');
   await db.ref('nations/' + myId + '/tiles').transaction(v => (v || 0) + 1);
+  await db.ref('nations/' + myId + '/capital').set(x + '_' + y);
   pushLog(`👑 ${me().name} が (${x},${y}) に首都を築いた`);
   toast('首都を建設しました!');
 }
@@ -288,6 +316,7 @@ async function attack(type) {
   if (!sel) return;
   const k = sel.x + '_' + sel.y, did = tiles[k], d = nations[did], a = me();
   if (!did || did === myId || !d) return;
+  if (isAlly(did)) return toast('同盟国は攻撃できません(先に同盟を解消)');
   if (Date.now() - lastAtk < COOLDOWN) return toast('部隊が再編中です(数秒待って)');
   const dist = minDist(sel.x, sel.y);
   if (dist > RANGE[type]) return toast(`${NAME[type]}の射程外です(射程${RANGE[type]}マス)`);
@@ -295,9 +324,15 @@ async function attack(type) {
   if (committed < 1) return toast(`${NAME[type]}がいません`);
   lastAtk = Date.now();
 
-  const du = d.units || {};
+  const isCap = d.capital === k;
   let def = 1;
-  for (const t of ['land', 'air', 'sea']) def += (du[t] || 0) * mult(t, type);
+  const addDef = (u, f) => { for (const t of ['land', 'air', 'sea']) def += (u[t] || 0) * mult(t, type) * f; };
+  addDef(d.units || {}, 1);
+  for (const aid of Object.keys(d.allies || {})) {           // 同盟国の援護(30%)
+    const an = nations[aid];
+    if (an && (an.tiles || 0) > 0) addDef(an.units || {}, 0.3);
+  }
+  if (isCap) def *= 1.5;                                      // 首都は防御1.5倍
   const atk = committed * (0.8 + Math.random() * 0.4);
   const win = atk > def;
 
@@ -309,21 +344,73 @@ async function attack(type) {
     if (!n) return;
     n.units = n.units || {};
     for (const t of ['land', 'air', 'sea']) n.units[t] = Math.floor((n.units[t] || 0) * (1 - dRate));
-    if (win) n.tiles = Math.max(0, (n.tiles || 0) - 1);
+    if (win && !isCap) n.tiles = Math.max(0, (n.tiles || 0) - 1);
     return n;
   });
 
-  if (win) {
+  if (win && isCap) {
+    const cnt = await annex(did, d);
+    pushLog(`👑 ${ICON[type]} ${a.name} が ${d.name} の首都を陥落!${cnt}マスの全領土を乗っ取った!`);
+    pushLog(`💀 ${d.name} は滅亡した…`);
+    toast(`首都陥落!${d.name}を乗っ取りました(+${cnt}マス)`);
+  } else if (win) {
     await db.ref('tiles/' + k).set(myId);
     await db.ref('nations/' + myId + '/tiles').transaction(v => (v || 0) + 1);
     pushLog(`${ICON[type]} ${a.name} が ${d.name} の (${sel.x},${sel.y}) を${NAME[type]}で占領!`);
     toast(`勝利!領土を奪いました(損害:${aLoss})`);
-    if ((d.tiles || 1) - 1 <= 0) pushLog(`💀 ${d.name} は全領土を失い滅亡した…`);
   } else {
     pushLog(`🛡️ ${d.name} が ${a.name} の${NAME[type]}による攻撃を撃退した`);
     toast(`敗北…(損害:${aLoss})`);
   }
 }
+
+// 首都陥落:敵の全領土を自国に編入し、資金の半分を戦利品として得る
+async function annex(did, d) {
+  const up = {};
+  let cnt = 0;
+  for (const key in tiles) if (tiles[key] === did) { up['tiles/' + key] = myId; cnt++; }
+  up['nations/' + did + '/tiles'] = 0;
+  up['nations/' + did + '/capital'] = null;
+  up['nations/' + did + '/allies'] = null;
+  up['nations/' + did + '/req'] = null;
+  up['nations/' + did + '/units'] = { land: 0, air: 0, sea: 0 };
+  for (const id in nations) if (id !== did && nations[id].allies && nations[id].allies[did]) up['nations/' + id + '/allies/' + did] = null;
+  await db.ref().update(up);
+  const loot = Math.floor((d.gold || 0) / 2);
+  await db.ref('nations/' + did + '/gold').transaction(g => Math.floor((g || 0) / 2));
+  await db.ref('nations/' + myId).transaction(n => {
+    if (!n) return;
+    n.tiles = (n.tiles || 0) + cnt;
+    n.gold = (n.gold || 0) + loot;
+    return n;
+  });
+  return cnt;
+}
+
+// ===== 同盟 =====
+const isAlly = id => !!(me() && me().allies && me().allies[id]);
+async function reqAlly(id) {
+  await db.ref(`nations/${id}/req/${myId}`).set(true);
+  toast('同盟を申請しました');
+}
+async function acceptAlly(id) {
+  const u = {};
+  u[`nations/${myId}/allies/${id}`] = true;
+  u[`nations/${id}/allies/${myId}`] = true;
+  u[`nations/${myId}/req/${id}`] = null;
+  u[`nations/${id}/req/${myId}`] = null;
+  await db.ref().update(u);
+  pushLog(`🤝 ${me().name} と ${nations[id].name} が同盟を結んだ!`);
+}
+async function declineAlly(id) { await db.ref(`nations/${myId}/req/${id}`).remove(); }
+async function breakAlly(id) {
+  const u = {};
+  u[`nations/${myId}/allies/${id}`] = null;
+  u[`nations/${id}/allies/${myId}`] = null;
+  await db.ref().update(u);
+  pushLog(`💔 ${me().name} が ${nations[id].name} との同盟を破棄した`);
+}
+async function setIcon(i) { await db.ref(`nations/${myId}/icon`).set(i); }
 
 // ===== UI =====
 function renderPanel() {
@@ -338,12 +425,12 @@ function renderPanel() {
     h += `どこの国でもない海です。<div class="btns"><button class="btn" ${adj ? '' : 'disabled'} onclick="expand()">🌊 領土にする(💰${expandCost()})</button></div>`;
     if (!adj) h += '<div class="hint">自国に隣接するマスだけ拡張できます。</div>';
   } else if (o === myId) {
-    h += 'あなたの領土です。';
+    h += n.capital === k ? '👑 あなたの首都です。ここを奪われると国が乗っ取られます!' : 'あなたの領土です。';
   } else {
     const d = minDist(sel.x, sel.y), u = n.units || {};
-    h += `<b style="color:${on ? on.color : '#fff'}">${on ? esc(on.name) : '?'}</b> の領土(領土${on?.tiles || 0}/自国から距離${d})<div class="btns">`;
+    h += `${on?.icon || ''} <b style="color:${on ? on.color : '#fff'}">${on ? esc(on.name) : '?'}</b> の領土${on?.capital === k ? ' 👑<b>首都</b>(防御1.5倍・陥落で国ごと乗っ取り)' : ''}${isAlly(o) ? ' 🤝同盟国' : ''}<div class="hint">領土${on?.tiles || 0}マス / 自国から距離${d}</div><div class="btns">`;
     for (const t of ['land', 'air', 'sea'])
-      h += `<button class="btn ${t}" ${(d <= RANGE[t] && (u[t] || 0) > 0) ? '' : 'disabled'} onclick="attack('${t}')">${ICON[t]} ${NAME[t]}で攻撃(${u[t] || 0})</button>`;
+      h += `<button class="btn ${t}" ${(d <= RANGE[t] && (u[t] || 0) > 0 && !isAlly(o)) ? '' : 'disabled'} onclick="attack('${t}')">${ICON[t]} ${NAME[t]}で攻撃(${u[t] || 0})</button>`;
     h += '</div>';
   }
   p.innerHTML = h;
@@ -352,7 +439,7 @@ function renderPanel() {
 function renderStats() {
   const n = me();
   $('stats').innerHTML = n
-    ? `<span>${esc(n.name)}</span><span>領土 <b>${n.tiles || 0}</b></span><span>💰 <b>${n.gold || 0}</b></span><span>🪖${n.units?.land || 0} ✈️${n.units?.air || 0} 🚢${n.units?.sea || 0}</span>`
+    ? `<span>${n.icon || ''} ${esc(n.name)}</span><span>領土 <b>${n.tiles || 0}</b></span><span>💰 <b>${n.gold || 0}</b></span><span>🪖${n.units?.land || 0} ✈️${n.units?.air || 0} 🚢${n.units?.sea || 0}</span>`
     : '';
   const b = $('banner');
   if (n && n.tiles <= 0) { b.style.display = 'block'; b.textContent = '👑 マップの空いている海をタップして首都を建設しよう!'; }
@@ -366,8 +453,8 @@ function renderRank() {
   $('rankList').innerHTML = list.length ? list.map(([id, n], i) => `
     <div class="rank ${id === myId ? 'me' : ''}">
       <div class="no">${['🥇', '🥈', '🥉'][i] || (i + 1)}</div>
-      <div class="dot" style="background:${n.color}"></div>
-      <div class="nm">${esc(n.name)}${id === myId ? '(あなた)' : ''}
+      <div class="dot" style="background:${n.color}"></div><div style="font-size:18px">${n.icon || '🏳️'}</div>
+      <div class="nm">${esc(n.name)}${id === myId ? '(あなた)' : ''}${isAlly(id) ? ' 🤝' : ''}
         <small>🪖${n.units?.land || 0} ✈️${n.units?.air || 0} 🚢${n.units?.sea || 0}</small>
         <div class="bar"><i style="width:${(n.tiles / max) * 100}%;background:${n.color}"></i></div></div>
       <div class="tl">${n.tiles}マス</div>
@@ -388,8 +475,30 @@ function renderLog() {
     : '<div class="hint">まだ出来事がありません。</div>';
 }
 
-function renderAll() { renderStats(); renderRank(); renderArmy(); renderPanel(); draw(); }
+function renderAlly() {
+  const n = me(); if (!n) return;
+  const others = Object.entries(nations).filter(([id, x]) => id !== myId && (x.tiles || 0) > 0);
+  const reqs = Object.keys(n.req || {}).filter(id => nations[id] && (nations[id].tiles || 0) > 0 && !(n.allies && n.allies[id]));
+  const rows = others.map(([id, x]) => {
+    const allied = n.allies && n.allies[id];
+    const theyReq = n.req && n.req[id];
+    const iReq = x.req && x.req[myId];
+    const btn = allied ? `<button class="btn red" onclick="breakAlly('${id}')">解消</button>`
+      : theyReq ? `<button class="btn" onclick="acceptAlly('${id}')">承諾</button><button class="btn red" onclick="declineAlly('${id}')">拒否</button>`
+      : iReq ? '<span class="hint">申請中…</span>'
+      : `<button class="btn" onclick="reqAlly('${id}')">同盟申請</button>`;
+    return `<div class="unit"><div>${x.icon || '🏳️'} <b style="color:${x.color}">${esc(x.name)}</b>${allied ? ' 🤝' : ''}${theyReq ? ' 📩申請あり' : ''}<div class="hint" style="margin:0">${x.tiles}マス</div></div><div class="btns" style="margin:0">${btn}</div></div>`;
+  }).join('');
+  $('allyBox').innerHTML = `
+    <div class="card"><h3>🏳️ 国のアイコン</h3>
+      <div class="icons">${ICONS.map(i => `<button class="ic ${n.icon === i ? 'on' : ''}" onclick="setIcon('${i}')">${i}</button>`).join('')}</div></div>
+    <div class="card"><h3>🤝 同盟</h3>${rows || '<div class="hint">同盟できる国がまだありません。</div>'}
+      <div class="hint">・同盟は双方が合意して成立します<br>・同盟国は攻撃できません(解消すれば攻撃可能)<br>・同盟国の軍隊が防衛を30%援護します<br>・首都が陥落した国は同盟も消滅します</div></div>`;
+}
+
+function renderAll() { renderStats(); renderRank(); renderArmy(); renderAlly(); renderPanel(); draw(); }
 window.expand = expand; window.attack = attack; window.buy = buy;
+window.reqAlly = reqAlly; window.acceptAlly = acceptAlly; window.declineAlly = declineAlly; window.breakAlly = breakAlly; window.setIcon = setIcon;
 </script>
 </body>
 </html>
