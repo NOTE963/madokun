@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>海の国 - 領土戦争</title>
+<title>海上戦争</title>
 <style>
 :root{--bg:#06172b;--panel:#0e2a47;--line:#1f4a75;--text:#e8f4ff;--sub:#8fb4d6;--accent:#ffd54a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -55,6 +55,10 @@ label{font-size:12px;color:var(--sub);display:block}
 .row2{display:flex;gap:12px;flex-wrap:wrap}
 #overlay{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:50;padding:16px;overflow:auto}
 #overlay .box{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:20px;max-width:400px;width:100%}
+.rule{background:#0a2238;border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-top:8px;font-size:13px;line-height:1.85}
+.rule b.t{display:block;font-size:14px;color:var(--accent);margin-bottom:2px}
+.tri{text-align:center;font-size:17px;font-weight:800;margin:4px 0;letter-spacing:1px}
+.ex{background:#173f66;border-radius:6px;padding:6px 8px;margin-top:4px}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#000d;padding:9px 16px;border-radius:20px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:60;max-width:90%}
 #toast.show{opacity:1}
 .hint{color:var(--sub);font-size:12px;margin-top:6px;line-height:1.7}
@@ -64,7 +68,7 @@ label{font-size:12px;color:var(--sub);display:block}
 <body>
 <header>
   <div class="top">
-    <h1>🌊 海の国 領土戦争</h1>
+    <h1>🌊 海上戦争</h1>
     <div id="stats"></div>
   </div>
   <nav id="tabs">
@@ -104,18 +108,37 @@ label{font-size:12px;color:var(--sub);display:block}
       <div id="armyList"></div>
     </div>
     <div class="card">
-      <h3>🧠 戦闘のルール(運の要素なし)</h3>
-      <div class="hint" style="margin-top:0">
-        ・攻撃側は<b>出撃させる部隊数</b>を自分で決めます(残りは自国の守りに)<br>
-        ・相性:<b>空 ▶ 陸 ▶ 海 ▶ 空</b>。敵の編成に対して有利な兵種を多く送ると強い<br>
-        ・攻撃力=出撃数 × 敵編成との相性(有利1.5倍/不利0.6倍)<br>
-        ・<b>挟撃</b>:目標マスに隣接する自国マス1つにつき攻撃+10%<br>
-        ・<b>守り</b>:周囲の自国マス1つにつき防御+10%、🧱要塞+50%、👑首都+50%、民兵+1<br>
-        ・🔍<b>偵察</b>(💰15)すると90秒間だけ敵の兵力が見えます。見えない時は読み合い<br>
-        ・攻撃力が防御力を上回れば勝利(同値は防衛側の勝ち)。接戦ほど双方の損害が大きい<br>
-        ・同盟国の軍隊は防衛を30%援護。<b>首都を落とされると全領土が乗っ取られます</b><br>
-        ・射程:陸=隣接、海=3マス、空=6マス
-      </div>
+      <h3>🧠 海上戦争のルール</h3>
+      <div class="hint" style="margin:0 0 4px">運はなし。兵の「強さ」の合計を比べて、大きいほうが勝ちます。</div>
+
+      <div class="rule"><b class="t">① 3つの兵種</b>
+        🪖 <b>陸軍</b> 強さ1 / 💰20 / 射程:となり … 弱いけど安い<br>
+        🚢 <b>海軍</b> 強さ2 / 💰45 / 射程3マス … ふつう、少し高い<br>
+        ✈️ <b>空軍</b> 強さ4 / 💰100 / 射程6マス … 最強だけど高い<br>
+        💡 数で押すなら陸、遠くまで届く少数精鋭なら空</div>
+
+      <div class="rule"><b class="t">② 勝ち負けの決め方</b>
+        あなたの強さ(出撃した部隊の強さの合計) &gt; 敵の強さ(守っている全部隊の合計 + 民兵1) → <b>勝ち</b><br>
+        同じか小さい → <b>負け</b>(同じ場合は守る側の勝ち)
+        <div class="ex">例:空軍2部隊(4×2=<b>8</b>)で攻撃<br>
+        敵:陸軍5部隊(1×5) + 民兵1 = <b>6</b> → <b>勝ち!</b></div></div>
+
+      <div class="rule"><b class="t">③ 場所のボーナス</b>
+        ⚔️ 攻撃側:目標マスの<b>まわりに自国マス</b>があるほど +10%ずつ(挟み撃ち)<br>
+        🛡️ 守備側:まわりに<b>自分のマス</b>があるほど +10%ずつ<br>
+        🧱 要塞化したマスは +50%、👑 首都は +50%<br>
+        👉 領土は飛び地にせず、まとめて固めると守りが強い</div>
+
+      <div class="rule"><b class="t">④ 出撃と残し方</b>
+        出撃させた部隊だけが攻撃に使われ、<b>残した部隊は自国の守り</b>になります。全部送ると守りが薄くなるので注意!</div>
+
+      <div class="rule"><b class="t">⑤ 偵察(🔍💰15)</b>
+        最初は敵の兵力が見えません(🔒)。偵察すると<b>90秒間</b>、敵の兵力と「勝てるか」の判定が見えます。</div>
+
+      <div class="rule"><b class="t">⑥ 戦いのあと</b>
+        勝ち:1マス奪う(首都なら<b>国ごと乗っ取り</b>)/ 負け:守られて終わり<br>
+        接戦ほど双方の兵の損害が大きく、圧勝ほど損害は小さい<br>
+        🤝 同盟国の軍隊は、守る側を30%の強さで助けてくれる</div>
     </div>
   </section>
 
@@ -180,12 +203,13 @@ const db = firebase.database();
 
 // ===== 設定 =====
 const W = 80, H = 56, C = 24;                 // 海の広さ(マス)/ 1マスの基準px
-const TYPES = ['land', 'air', 'sea'];
-const COST = { land: 30, air: 50, sea: 40 };
+const TYPES = ['land', 'sea', 'air'];
+const COST = { land: 20, sea: 45, air: 100 };          // 陸:安い / 海:少し高い / 空:高い
+const POW = { land: 1, sea: 2, air: 4 };               // 1部隊あたりの強さ
+const DESC = { land: '弱いが安い', sea: '標準・少し高い', air: '最強だが高い' };
 const NAME = { land: '陸軍', air: '空軍', sea: '海軍' };
 const ICON = { land: '🪖', air: '✈️', sea: '🚢' };
 const RANGE = { land: 1, sea: 3, air: 6 };
-const BEATS = { air: 'land', land: 'sea', sea: 'air' };
 const COOLDOWN = 4000, SCOUT_COST = 15, SCOUT_MS = 90000, FORT_COST = 25;
 const PRESETS = ['🥚','🐉','🦅','🦁','🐺','🐻','🦈','🐙','🦊','🐢','🐘','🌸','⭐','🔥','⚓','👑','🏯','🌙'];
 const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
@@ -465,27 +489,22 @@ async function buy(type) {
 }
 
 // ===== 戦争(運なし・読み合い) =====
-const mm = (x, y) => BEATS[x] === y ? 1.5 : (BEATS[y] === x ? 0.6 : 1);
-const mixMult = (T, sh, tot) => tot ? TYPES.reduce((s, D) => s + sh[D] * mm(T, D), 0) : 1;
 
 function forecast(snd, k, did) {
   const d = nations[did], tr = terrain(k, did);
-  const def = { land: 0, air: 0, sea: 0 };
+  const def = { land: 0, sea: 0, air: 0 };
   for (const T of TYPES) def[T] = (d.units && d.units[T]) || 0;
-  for (const aid of Object.keys(d.allies || {})) {
+  for (const aid of Object.keys(d.allies || {})) {           // 同盟国は30%の力で援護
     const an = nations[aid];
     if (an && (an.tiles || 0) > 0) for (const T of TYPES) def[T] += ((an.units && an.units[T]) || 0) * 0.3;
   }
-  const sT = TYPES.reduce((s, T) => s + (snd[T] || 0), 0), dT = TYPES.reduce((s, T) => s + def[T], 0);
-  const sSh = {}, dSh = {};
-  for (const T of TYPES) { sSh[T] = sT ? (snd[T] || 0) / sT : 0; dSh[T] = dT ? def[T] / dT : 0; }
-  let atk = 0, dfn = 0;
-  for (const T of TYPES) { atk += (snd[T] || 0) * mixMult(T, dSh, dT); dfn += def[T] * mixMult(T, sSh, sT); }
+  let atk = 0, base = 0;
+  for (const T of TYPES) { atk += (snd[T] || 0) * POW[T]; base += def[T] * POW[T]; }
   atk *= 1 + 0.1 * tr.flank;
-  dfn = (dfn + 1) * (1 + 0.1 * tr.fn) * (tr.fort ? 1.5 : 1) * (tr.isCap ? 1.5 : 1);
+  const dfn = (base + 1) * (1 + 0.1 * tr.fn) * (tr.fort ? 1.5 : 1) * (tr.isCap ? 1.5 : 1);
   const win = atk > dfn, hi = Math.max(atk, dfn), lo = Math.min(atk, dfn), r = hi > 0 ? lo / hi : 0;
   const wl = 0.6 * r, ll = Math.min(0.95, 0.5 + 0.4 * (1 - r));
-  return { atk, dfn, win, fa: win ? wl : ll, fd: win ? ll : wl, tr, def };
+  return { atk, dfn, win, fa: win ? wl : ll, fd: win ? ll : wl, tr, def, base };
 }
 
 async function attack() {
@@ -521,7 +540,7 @@ async function attack() {
     return n;
   });
 
-  const desc = `(陸${sent.land} 空${sent.air} 海${sent.sea})`;
+  const desc = `(陸${sent.land} 海${sent.sea} 空${sent.air})`;
   if (f.win && isCap) {
     const cnt = await annex(did, d);
     pushLog(`👑 ${a.name} が ${d.name} の首都「${capName(d)}」を陥落!${cnt}マスの全領土を乗っ取った!`);
@@ -636,15 +655,16 @@ function renderPanel() {
     if (ally) {
       h += '<div class="hint">同盟国は攻撃できません。</div>';
     } else {
-      h += TYPES.map(T => `<div class="unit"><div>${ICON[T]} ${NAME[T]}<div class="hint" style="margin:0">保有${u[T] || 0}・射程${RANGE[T]}${d <= RANGE[T] ? '' : '(圏外)'}</div></div>
+      h += TYPES.map(T => `<div class="unit"><div>${ICON[T]} ${NAME[T]}<div class="hint" style="margin:0">保有${u[T] || 0}・強さ${POW[T]}・射程${RANGE[T]}${d <= RANGE[T] ? '' : '(圏外)'}</div></div>
         <div class="stepper"><button class="btn" ${d <= RANGE[T] ? '' : 'disabled'} onclick="adj('${T}',-1)">−</button><b>${send[T]}</b><button class="btn" ${d <= RANGE[T] ? '' : 'disabled'} onclick="adj('${T}',1)">＋</button></div></div>`).join('');
-      h += `<div class="fc">挟撃 <b>+${tr.flank * 10}%</b>(目標に隣接する自国マス${tr.flank}) / 敵の守り <b>+${tr.fn * 10}%</b>${tr.fort ? ' / 🧱要塞+50%' : ''}${tr.isCap ? ' / 👑首都+50%' : ''}`;
+      h += `<div class="fc"><b>📊 戦況の見通し</b><br>📍 地形:自軍の挟撃 <b>+${tr.flank * 10}%</b> / 敵の守り <b>+${tr.fn * 10}%</b>${tr.fort ? ' / 🧱要塞+50%' : ''}${tr.isCap ? ' / 👑首都+50%' : ''}`;
       if (known) {
         const f = forecast(send, k, o), dd = f.def;
-        h += `<br>敵戦力(同盟援護込): 🪖${dd.land.toFixed(1)} ✈️${dd.air.toFixed(1)} 🚢${dd.sea.toFixed(1)}`;
-        if (total > 0) h += `<br>攻撃力 <b>${f.atk.toFixed(1)}</b> vs 防御力 <b>${f.dfn.toFixed(1)}</b> → ${f.win ? '<span class="win">勝利見込み</span>' : '<span class="lose">敗北見込み</span>'}<br>損害予想:自軍${Math.round(f.fa * 100)}% / 敵${Math.round(f.fd * 100)}%`;
+        h += `<br>👁 敵の戦力:🪖${dd.land.toFixed(1)} 🚢${dd.sea.toFixed(1)} ✈️${dd.air.toFixed(1)}(強さ合計 ${f.base.toFixed(1)})`;
+        if (total > 0) h += `<br>⚔️ あなたの強さ <b>${f.atk.toFixed(1)}</b> ／ 🛡️ 敵の強さ <b>${f.dfn.toFixed(1)}</b><br>${f.win ? '<span class="win">✅ 勝てる!</span>' : '<span class="lose">❌ 負ける…(部隊を増やす)</span>'}<br>💥 失う兵:自軍${Math.round(f.fa * 100)}% / 敵${Math.round(f.fd * 100)}%`;
+        else h += '<br>👆 出撃させる部隊を ＋ で選ぶと、勝てるか判定します';
       } else {
-        h += `<br>🔒 敵の戦力は不明です。偵察(💰${SCOUT_COST})で90秒間見えます。`;
+        h += '<br>🔒 敵の戦力が見えません → <b>🔍偵察</b>すると「勝てるか」が判定できます(💰' + SCOUT_COST + ')';
       }
       h += '</div>';
       h += `<div class="btns"><button class="btn gray" onclick="scout('${o}')" ${known ? 'disabled' : ''}>🔍 偵察 💰${SCOUT_COST}</button><button class="btn gray" onclick="allIn()">全投入</button><button class="btn red" ${total > 0 ? '' : 'disabled'} onclick="attack()">⚔️ 攻撃!</button></div>`;
@@ -656,7 +676,7 @@ function renderPanel() {
 function renderStats() {
   const n = me();
   $('stats').innerHTML = n
-    ? `<span>${esc(n.icon || '')} ${esc(n.name)}</span><span>領土 <b>${n.tiles || 0}</b></span><span>💰 <b>${n.gold || 0}</b></span><span>🪖${n.units?.land || 0} ✈️${n.units?.air || 0} 🚢${n.units?.sea || 0}</span>`
+    ? `<span>${esc(n.icon || '')} ${esc(n.name)}</span><span>領土 <b>${n.tiles || 0}</b></span><span>💰 <b>${n.gold || 0}</b></span><span>🪖${n.units?.land || 0} 🚢${n.units?.sea || 0} ✈️${n.units?.air || 0}</span>`
     : '';
   const b = $('banner');
   if (n && n.tiles <= 0) { b.style.display = 'block'; b.textContent = '👑 マップの空いている海をタップして首都を建設しよう!'; }
@@ -672,7 +692,7 @@ function renderRank() {
       <div class="dot" style="background:${n.color}"></div>
       <div style="font-size:18px">${esc(n.icon || '🏳️')}</div>
       <div class="nm">${esc(n.name)}${id === myId ? '(あなた)' : ''}${isAlly(id) ? ' 🤝' : ''}
-        <small>首都:${esc(capIcon(n))}${esc(capName(n))} / ${isKnown(id) ? `🪖${n.units?.land || 0} ✈️${n.units?.air || 0} 🚢${n.units?.sea || 0}` : '🔒戦力不明'}</small>
+        <small>首都:${esc(capIcon(n))}${esc(capName(n))} / ${isKnown(id) ? `🪖${n.units?.land || 0} 🚢${n.units?.sea || 0} ✈️${n.units?.air || 0}` : '🔒戦力不明'}</small>
         <div class="bar"><i style="width:${(n.tiles / max) * 100}%;background:${n.color}"></i></div></div>
       <div class="tl">${n.tiles}マス</div>
     </div>`).join('') : '<div class="hint">まだ国がありません。</div>';
@@ -682,7 +702,7 @@ function renderArmy() {
   const n = me(); if (!n) return;
   $('armyList').innerHTML = TYPES.map(t => `
     <div class="unit"><div>${ICON[t]} <b>${NAME[t]}</b> × ${n.units?.[t] || 0}
-      <div class="hint" style="margin:0">射程 ${RANGE[t]}マス</div></div>
+      <div class="hint" style="margin:0">強さ${POW[t]}・射程${RANGE[t]}マス・${DESC[t]}</div></div>
       <button class="btn ${t}" onclick="buy('${t}')">増強 💰${COST[t]}</button></div>`).join('');
 }
 
